@@ -29,6 +29,11 @@ namespace TimeExt
         {
             this.timer = new Timer(_ => EventHelper.Raise(Tick, this, EventArgs.Empty), null, interval, interval);
         }
+
+        public void Dispose()
+        {
+            timer.Dispose();
+        }
     }
 
     public sealed class RealTimeline : ITimeline

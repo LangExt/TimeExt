@@ -11,7 +11,7 @@ namespace TimeExt
         TimeSpan Elapsed { get; }
     }
 
-    public interface ITimer
+    public interface ITimer : IDisposable
     {
         event EventHandler Tick;
     }
