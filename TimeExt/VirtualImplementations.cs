@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace TimeExt
 {
-    public class VirtualStopwatch : IStopwatch
+    internal sealed class VirtualStopwatch : IStopwatch
     {
         readonly Func<TimeSpan> elapsed;
 
@@ -22,7 +22,7 @@ namespace TimeExt
         }
     }
 
-    public sealed class VirtualTimer : ITimer
+    internal sealed class VirtualTimer : ITimer
     {
         public event EventHandler Tick;
         readonly TimeSpan interval;
@@ -33,19 +33,24 @@ namespace TimeExt
             this.timeline = timeline;
             this.interval = interval;
 
+            // タイムラインの現在時刻が変更されたらOnTickを呼び出すようにする
             timeline.ChangedNow += OnTick;
         }
 
+        // タイムラインの現在時刻が変更された場合に呼び出されるメソッド。
+        // この中で必要に応じてTickイベントを発火する。
         private void OnTick(object sender, ChangedNowEventArgs e)
         {
             var totalTicksCount = (e.Delta.Ticks + this.timeline.CurrentRemainedTicks) / this.interval.Ticks;
             this.timeline.CurrentRemainedTicks = (e.Delta.Ticks + this.timeline.CurrentRemainedTicks) % this.interval.Ticks;
+            // 最大totalTicsCount回のTickイベントを発火する。
             for (int i = 0; i < totalTicksCount; i++)
             {
                 using (var scope = this.timeline.CreateNewTimeline(interval, i + 1))
                 {
                     EventHelper.Raise(this.Tick, this, EventArgs.Empty);
-                    i += scope.TicksCount;
+                    i += scope.TicksCount;      // 子のタイムラインでTickイベントを発火していたら、その分は発火しないようにする。
+                                                // これをしないと、イベントを重複して発火させてしまう。
                 }
             }
         }
@@ -70,11 +75,15 @@ namespace TimeExt
             this.passed += span;
         }
 
+        // 基準時刻(Origin)に待った時間の合計を足せば、その時点での現在時刻になる
         internal DateTime Now
         {
             get { return this.Origin + this.passed; }
         }
 
+        /// <summary>
+        /// 発火させるべきTickイベントの回数を1増加させます。
+        /// </summary>
         internal void IncrementTicksCount()
         {
             this.ticksCount++;
@@ -83,9 +92,9 @@ namespace TimeExt
         internal int TicksCount { get { return this.ticksCount; } }
     }
 
-    public class ChangedNowEventArgs : EventArgs
+    internal sealed class ChangedNowEventArgs : EventArgs
     {
-        public readonly TimeSpan Delta;
+        internal readonly TimeSpan Delta;
 
         internal ChangedNowEventArgs(TimeSpan delta)
         {
@@ -101,6 +110,7 @@ namespace TimeExt
         {
             this.timelines = timelines;
 
+            // このクラスはTickを呼ぶたびにインスタンス化されるので、Tickの回数をインクリメントする必要がある。
             timelines.Peek().IncrementTicksCount();
             var newTimeline = new RelativeTimeline(timelines.Peek().Origin + (TimeSpan.FromTicks(interval.Ticks * tickTimes)));
             this.timelines.Push(newTimeline);
@@ -117,12 +127,24 @@ namespace TimeExt
         }
     }
 
+    /// <summary>
+    /// 時間に依存するロジックをテストするために使用するクラスです。
+    /// このクラスは、タイマーによる非同期コードを直列化することで、
+    /// 実時間を消費する必要なしに時間に依存するロジックに対するテストを実現します。
+    /// 通常、テストケースごとにこのクラスのインスタンスを生成し、
+    /// アプリケーションで使用するITimelineをそのインスタンスに変更することで、
+    /// 時間に依存するロジックをテスト可能にします。
+    /// </summary>
     public sealed class VirtualTimeline : ITimeline
     {
         internal event EventHandler<ChangedNowEventArgs> ChangedNow;
 
         readonly Stack<RelativeTimeline> timelines = new Stack<RelativeTimeline>();
 
+        /// <summary>
+        /// 基準時刻を指定してインスタンスを生成します。
+        /// </summary>
+        /// <param name="origin">基準時刻</param>
         public VirtualTimeline(DateTime origin)
         {
             timelines.Push(new RelativeTimeline(origin));
@@ -141,6 +163,9 @@ namespace TimeExt
 
         public void WaitForTime(TimeSpan span)
         {
+            // 現在時刻を指定時間分進めます。
+            // その過程で、タイマーと連動(ChangedNowにタイマーのOnTickが指定されている)して、
+            // 指定周期が満たされた分だけTickイベントを発火します。
             timelines.Peek().WaitForTime(span);
             EventHelper.Raise(this.ChangedNow, this, new ChangedNowEventArgs(span));
         }
