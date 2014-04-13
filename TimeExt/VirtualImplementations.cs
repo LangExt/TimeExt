@@ -33,13 +33,12 @@ namespace TimeExt
             this.timeline = timeline;
             this.interval = interval;
 
-            // タイムラインの現在時刻が変更されたらOnTickを呼び出すようにする
-            timeline.ChangedNow += OnTick;
+            timeline.ChangedNow += this.OnChangedNow;
         }
 
         // タイムラインの現在時刻が変更された場合に呼び出されるメソッド。
         // この中で必要に応じてTickイベントを発火する。
-        private void OnTick(object sender, ChangedNowEventArgs e)
+        private void OnChangedNow(object sender, ChangedNowEventArgs e)
         {
             var totalTicksCount = (e.Delta.Ticks + this.timeline.CurrentRemainedTicks) / this.interval.Ticks;
             this.timeline.CurrentRemainedTicks = (e.Delta.Ticks + this.timeline.CurrentRemainedTicks) % this.interval.Ticks;
@@ -164,8 +163,8 @@ namespace TimeExt
         public void WaitForTime(TimeSpan span)
         {
             // 現在時刻を指定時間分進めます。
-            // その過程で、タイマーと連動(ChangedNowにタイマーのOnTickが指定されている)して、
-            // 指定周期が満たされた分だけTickイベントを発火します。
+            // その過程で、タイマーと連動(ChangedNowにタイマーのOnChangedNowが登録される)して、
+            // 指定周期が満たされた分だけタイマーのTickイベントを発火します。
             timelines.Peek().WaitForTime(span);
             EventHelper.Raise(this.ChangedNow, this, new ChangedNowEventArgs(span));
         }
