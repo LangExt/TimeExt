@@ -27,7 +27,7 @@ namespace TimeExt
 
         internal RealTimer(TimeSpan interval) 
         {
-            this.timer = new Timer(_ => EventHelper.Raise(Tick, this, EventArgs.Empty), null, TimeSpan.Zero, interval);
+            this.timer = new Timer(_ => EventHelper.Raise(Tick, this, EventArgs.Empty), null, interval, interval);
         }
     }
 
