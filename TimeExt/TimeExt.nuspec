@@ -1,0 +1,13 @@
+<?xml version="1.0"?>
+<package >
+  <metadata>
+    <id>$id$</id>
+    <version>$version$</version>
+    <authors>bleis-tift,otf</authors>
+    <licenseUrl>https://github.com/LangExt/TimeExt/blob/master/LICENSE</licenseUrl>
+    <projectUrl>https://github.com/LangExt/TimeExt</projectUrl>
+    <requireLicenseAcceptance>false</requireLicenseAcceptance>
+    <description>This is a mock library for time API.</description>
+    <tags>c# time mock library</tags>
+  </metadata>
+</package>
