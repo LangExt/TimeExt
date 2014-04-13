@@ -22,7 +22,7 @@ namespace TimeExt
     /// <summary>
     /// 一定周期で処理を実行することのできるタイマーを表すインターフェイスです。
     /// </summary>
-    public interface ITimer
+    public interface ITimer : IDisposable
     {
         /// <summary>
         /// タイマーに設定した刻み毎に呼び出されるイベントです。

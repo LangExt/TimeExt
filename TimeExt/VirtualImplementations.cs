@@ -53,6 +53,11 @@ namespace TimeExt
                 }
             }
         }
+
+        public void Dispose()
+        {
+            // for the real world.
+        }
     }
 
     internal sealed class RelativeTimeline
