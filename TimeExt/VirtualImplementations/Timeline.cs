@@ -25,7 +25,7 @@ namespace TimeExt.VirtualImplementations
         }
 
         // 基準時刻(Origin)に待った時間の合計を足せば、その時点での現在時刻になる
-        internal DateTime Now
+        internal DateTime UtcNow
         {
             get { return this.Origin + this.passed; }
         }
@@ -126,7 +126,7 @@ namespace TimeExt.VirtualImplementations
 
         public DateTime UtcNow
         {
-            get { return timelines.Peek().Now; }
+            get { return timelines.Peek().UtcNow; }
         }
 
         public ITimer CreateTimer(TimeSpan interval)
