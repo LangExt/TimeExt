@@ -40,7 +40,7 @@ namespace TimeExt
     public interface ITimeline
     {
         /// <summary>
-        /// 現在時刻を取得します。
+        /// コンピュータの現在時刻をUTCで表したオブジェクトを取得します。
         /// </summary>
         DateTime UtcNow { get; }
 
