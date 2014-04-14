@@ -49,12 +49,16 @@ namespace TimeExt.VirtualImplementations
     internal sealed class ChangedNowEventArgs : EventArgs
     {
         internal readonly TimeSpan Delta;
-        internal readonly int TicksCount;
+
+        /// <summary>
+        /// ChangingNowで発生したTickイベントの回数 
+        /// </summary>
+        internal readonly int ChangingNowTicksCount;
 
         internal ChangedNowEventArgs(TimeSpan delta, int ticksCount)
         {
             this.Delta = delta;
-            this.TicksCount = ticksCount;
+            this.ChangingNowTicksCount = ticksCount;
         }
     }
 

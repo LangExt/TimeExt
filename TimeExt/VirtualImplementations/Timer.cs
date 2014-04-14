@@ -56,7 +56,7 @@ namespace TimeExt.VirtualImplementations
             var totalTicksCount = (e.Delta.Ticks + this.timeline.CurrentRemainedTicks) / this.interval.Ticks;
             this.timeline.CurrentRemainedTicks = (e.Delta.Ticks + this.timeline.CurrentRemainedTicks) % this.interval.Ticks;
             // 最大totalTicsCount回のTickイベントを発火する。
-            for (int i = 0; i < totalTicksCount - e.TicksCount; i++)
+            for (int i = 0; i < totalTicksCount - e.ChangingNowTicksCount; i++)
             {
                 using (var scope = this.timeline.CreateNewTimeline(interval, i + 1))
                 {
