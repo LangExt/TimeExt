@@ -174,7 +174,7 @@ namespace TimeExt
             EventHelper.Raise(this.ChangedNow, this, new ChangedNowEventArgs(span));
         }
 
-        public DateTime Now
+        public DateTime UtcNow
         {
             get { return timelines.Peek().Now; }
         }
@@ -186,8 +186,8 @@ namespace TimeExt
 
         public IStopwatch CreateStopwatch()
         {
-            var start = Now;
-            return new VirtualStopwatch(() => Now - start);
+            var start = UtcNow;
+            return new VirtualStopwatch(() => UtcNow - start);
         }
 
         public Action CreateWaiter(params TimeSpan[] timeSpans)

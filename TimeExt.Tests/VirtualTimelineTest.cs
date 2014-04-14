@@ -15,7 +15,7 @@ namespace TimeExt.Tests
         public void Timelineは現在時刻を取得できること(string now)
         {
             ITimeline tl = new VirtualTimeline(DateTime.Parse(now));
-            Assert.That(tl.Now, Is.EqualTo(DateTime.Parse(now)));
+            Assert.That(tl.UtcNow, Is.EqualTo(DateTime.Parse(now)));
         }
 
         [Test]
@@ -24,7 +24,7 @@ namespace TimeExt.Tests
             var tl = new VirtualTimeline(DateTime.Parse("2014/01/01 00:00:00"));
 
             tl.WaitForTime(TimeSpan.FromSeconds(5));
-            Assert.That(tl.Now, Is.EqualTo(DateTime.Parse("2014/01/01 00:00:05")));
+            Assert.That(tl.UtcNow, Is.EqualTo(DateTime.Parse("2014/01/01 00:00:05")));
         }
 
         [Test]
@@ -61,7 +61,7 @@ namespace TimeExt.Tests
             tl.WaitForTime(TimeSpan.FromSeconds(3));
 
             Assert.That(count, Is.EqualTo(4));
-            Assert.That(tl.Now, Is.EqualTo(DateTime.Parse("2014/01/01 00:00:00") + TimeSpan.FromSeconds(3)));
+            Assert.That(tl.UtcNow, Is.EqualTo(DateTime.Parse("2014/01/01 00:00:00") + TimeSpan.FromSeconds(3)));
         }
 
         [Test]
@@ -71,13 +71,13 @@ namespace TimeExt.Tests
             var timer = tl.CreateTimer(TimeSpan.FromSeconds(3));
             var wait = tl.CreateWaiter(TimeSpan.FromSeconds(9), TimeSpan.FromSeconds(1), TimeSpan.FromSeconds(1), TimeSpan.FromSeconds(1), TimeSpan.Zero, TimeSpan.Zero, TimeSpan.Zero, TimeSpan.Zero, TimeSpan.Zero);
             var count = 0;
-            timer.Tick += (sender, args) => { var start = tl.Now; ++count; wait(); var end = tl.Now; Console.WriteLine(); };
+            timer.Tick += (sender, args) => { var start = tl.UtcNow; ++count; wait(); var end = tl.UtcNow; Console.WriteLine(); };
             tl.WaitForTime(TimeSpan.FromSeconds(14));
 
             // 余計に実行されない確認
             Assert.That(count, Is.EqualTo(14 / 3 /*4*/));
             // 余計に待たない確認
-            Assert.That(tl.Now, Is.EqualTo(DateTime.Parse("2014/01/01 00:00:00") + TimeSpan.FromSeconds(14)));
+            Assert.That(tl.UtcNow, Is.EqualTo(DateTime.Parse("2014/01/01 00:00:00") + TimeSpan.FromSeconds(14)));
         }
 
         [Test]
@@ -103,7 +103,7 @@ namespace TimeExt.Tests
             tl.WaitForTime(TimeSpan.FromSeconds(2));
 
             Assert.That(isFired, Is.True);
-            Assert.That(tl.Now, Is.EqualTo(DateTime.Parse("2014/01/01 00:00:03")));
+            Assert.That(tl.UtcNow, Is.EqualTo(DateTime.Parse("2014/01/01 00:00:03")));
         }
 
         [TestCase(1, 8)]

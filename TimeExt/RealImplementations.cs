@@ -38,7 +38,7 @@ namespace TimeExt
 
     public sealed class RealTimeline : ITimeline
     {
-        public DateTime Now
+        public DateTime UtcNow
         {
             get { return DateTime.UtcNow; }
         }

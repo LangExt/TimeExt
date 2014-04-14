@@ -42,7 +42,7 @@ namespace TimeExt
         /// <summary>
         /// 現在時刻を取得します。
         /// </summary>
-        DateTime Now { get; }
+        DateTime UtcNow { get; }
 
         /// <summary>
         /// 指定した時間だけ待ちます。
