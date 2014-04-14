@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using TimeExt.VirtualImplementations;
 
 namespace TimeExt.Tests
 {
@@ -13,14 +14,14 @@ namespace TimeExt.Tests
         [Test]
         public void TimelineにUTCではないDateTimeを渡すと例外が投げられる()
         {
-            Assert.That(() => new VirtualTimeline(DateTime.Now), Throws.Exception.TypeOf<ArgumentException>());
+            Assert.That(() => new Timeline(DateTime.Now), Throws.Exception.TypeOf<ArgumentException>());
         }
 
         [TestCase("2014/01/01")]
         [TestCase("2014/01/02")]
         public void Timelineは現在時刻を取得できる(string now)
         {
-            ITimeline tl = new VirtualTimeline(DateTime.Parse(now).ToUniversalTime());
+            ITimeline tl = new Timeline(DateTime.Parse(now).ToUniversalTime());
             Assert.That(tl.UtcNow, Is.EqualTo(DateTime.Parse(now).ToUniversalTime()));
         }
 
@@ -29,7 +30,7 @@ namespace TimeExt.Tests
         [Test]
         public void Timelineは時間を進めると現在時刻がその分進んでいる()
         {
-            var tl = new VirtualTimeline(this.origin);
+            var tl = new Timeline(this.origin);
 
             tl.WaitForTime(TimeSpan.FromSeconds(5));
             Assert.That(tl.UtcNow, Is.EqualTo(this.origin + TimeSpan.FromSeconds(5)));
@@ -38,7 +39,7 @@ namespace TimeExt.Tests
         [Test]
         public void ブロック間の時間を計測して進めた分だけの時間が取得できる()
         {
-            var tl = new VirtualTimeline(this.origin);
+            var tl = new Timeline(this.origin);
             var sw = tl.CreateStopwatch();
 
             tl.WaitForTime(TimeSpan.FromSeconds(5));
@@ -49,7 +50,7 @@ namespace TimeExt.Tests
         [Test]
         public void 指定した間隔分の時間を進めた時に初回のTickイベントが発火される()
         {
-            var tl = new VirtualTimeline(this.origin);
+            var tl = new Timeline(this.origin);
             var timer = tl.CreateTimer(TimeSpan.FromSeconds(3));
             var isFired = false;
             timer.Tick += (sender, args) => { isFired = true; };
@@ -61,7 +62,7 @@ namespace TimeExt.Tests
         [Test]
         public void 指定した間隔の3回分時間のかかる処理を実行したとき4回実行される()
         {
-            var tl = new VirtualTimeline(this.origin);
+            var tl = new Timeline(this.origin);
             var timer = tl.CreateTimer(TimeSpan.FromSeconds(3));
             var wait = tl.CreateWaiter(TimeSpan.FromSeconds(9), TimeSpan.FromSeconds(1), TimeSpan.FromSeconds(1), TimeSpan.FromSeconds(1), TimeSpan.FromTicks(1));
             var count = 0;
@@ -75,7 +76,7 @@ namespace TimeExt.Tests
         [Test]
         public void 指定した間隔で時間のかかる処理を実行してもメインでその分待っていれば余計に実行されない()
         {
-            var tl = new VirtualTimeline(this.origin);
+            var tl = new Timeline(this.origin);
             var timer = tl.CreateTimer(TimeSpan.FromSeconds(3));
             var wait = tl.CreateWaiter(TimeSpan.FromSeconds(9), TimeSpan.FromSeconds(1), TimeSpan.FromSeconds(1), TimeSpan.FromSeconds(1), TimeSpan.Zero, TimeSpan.Zero, TimeSpan.Zero, TimeSpan.Zero, TimeSpan.Zero);
             var count = 0;
@@ -91,7 +92,7 @@ namespace TimeExt.Tests
         [Test]
         public void 指定した間隔2回分の時間が進めた時に2回Tickイベントが発火される()
         {
-            var tl = new VirtualTimeline(this.origin);
+            var tl = new Timeline(this.origin);
             var timer = tl.CreateTimer(TimeSpan.FromSeconds(3));
             var count = 0;
             timer.Tick += (sender, args) => { count++; };
@@ -103,7 +104,7 @@ namespace TimeExt.Tests
         [Test]
         public void 指定した間隔を2回に分けて進めた時に初回のTickイベントが発火される()
         {
-            var tl = new VirtualTimeline(this.origin);
+            var tl = new Timeline(this.origin);
             var timer = tl.CreateTimer(TimeSpan.FromSeconds(3));
             var isFired = false;
             timer.Tick += (sender, args) => { isFired = true; };
@@ -118,7 +119,7 @@ namespace TimeExt.Tests
         [TestCase(4, 5)]
         public void 指定した間隔3回分を2回に分けて進めたときに3回Tickイベントが発火される(int firstSpan, int secondSpan)
         {
-            var tl = new VirtualTimeline(this.origin);
+            var tl = new Timeline(this.origin);
             var timer = tl.CreateTimer(TimeSpan.FromSeconds(3));
             var count = 0;
             timer.Tick += (sender, args) => { count++; };
@@ -169,7 +170,7 @@ namespace TimeExt.Tests
         {
             var specificInterval = 3.0;
 
-            var tl = new VirtualTimeline(this.origin);
+            var tl = new Timeline(this.origin);
             tl.WaitForTime(TimeSpan.FromSeconds(n));
             var timer = tl.CreateTimer(TimeSpan.FromSeconds(specificInterval));
             var count = 0;

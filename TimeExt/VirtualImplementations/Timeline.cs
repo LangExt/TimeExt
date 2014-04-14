@@ -2,64 +2,9 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
 
-namespace TimeExt
+namespace TimeExt.VirtualImplementations
 {
-    internal sealed class VirtualStopwatch : IStopwatch
-    {
-        readonly Func<TimeSpan> elapsed;
-
-        internal VirtualStopwatch(Func<TimeSpan> elapsed)
-        {
-            this.elapsed = elapsed;
-        }
-
-        public TimeSpan Elapsed
-        {
-            get { return elapsed(); }
-        }
-    }
-
-    internal sealed class VirtualTimer : ITimer
-    {
-        public event EventHandler Tick;
-        readonly TimeSpan interval;
-        readonly VirtualTimeline timeline;
-
-        internal VirtualTimer(VirtualTimeline timeline, TimeSpan interval)
-        {
-            this.timeline = timeline;
-            this.interval = interval;
-
-            timeline.ChangedNow += this.OnChangedNow;
-        }
-
-        // タイムラインの現在時刻が変更された場合に呼び出されるメソッド。
-        // この中で必要に応じてTickイベントを発火する。
-        private void OnChangedNow(object sender, ChangedNowEventArgs e)
-        {
-            var totalTicksCount = (e.Delta.Ticks + this.timeline.CurrentRemainedTicks) / this.interval.Ticks;
-            this.timeline.CurrentRemainedTicks = (e.Delta.Ticks + this.timeline.CurrentRemainedTicks) % this.interval.Ticks;
-            // 最大totalTicsCount回のTickイベントを発火する。
-            for (int i = 0; i < totalTicksCount; i++)
-            {
-                using (var scope = this.timeline.CreateNewTimeline(interval, i + 1))
-                {
-                    EventHelper.Raise(this.Tick, this, EventArgs.Empty);
-                    i += scope.TicksCount;      // 子のタイムラインでTickイベントを発火していたら、その分は発火しないようにする。
-                                                // これをしないと、イベントを重複して発火させてしまう。
-                }
-            }
-        }
-
-        public void Dispose()
-        {
-            // for the real world.
-        }
-    }
-
     internal sealed class RelativeTimeline
     {
         internal readonly DateTime Origin;
@@ -139,7 +84,7 @@ namespace TimeExt
     /// アプリケーションで使用するITimelineをそのインスタンスに変更することで、
     /// 時間に依存するロジックをテスト可能にします。
     /// </summary>
-    public sealed class VirtualTimeline : ITimeline
+    public sealed class Timeline : ITimeline
     {
         internal event EventHandler<ChangedNowEventArgs> ChangedNow;
 
@@ -152,7 +97,7 @@ namespace TimeExt
         /// UTCに変換したうえで使用してください。
         /// </summary>
         /// <param name="origin">基準時刻</param>
-        public VirtualTimeline(DateTime origin)
+        public Timeline(DateTime origin)
         {
             if (origin.Kind != DateTimeKind.Utc)
                 throw new ArgumentException("基準となる時刻にはUTCを指定する必要があります。", "origin");
@@ -186,13 +131,13 @@ namespace TimeExt
 
         public ITimer CreateTimer(TimeSpan interval)
         {
-            return new VirtualTimer(this, interval);
+            return new Timer(this, interval);
         }
 
         public IStopwatch CreateStopwatch()
         {
             var start = UtcNow;
-            return new VirtualStopwatch(() => UtcNow - start);
+            return new Stopwatch(() => UtcNow - start);
         }
 
         public Action CreateWaiter(params TimeSpan[] timeSpans)
