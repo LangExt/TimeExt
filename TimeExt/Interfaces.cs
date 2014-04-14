@@ -31,6 +31,22 @@ namespace TimeExt
     }
 
     /// <summary>
+    /// タイマー起動時にTickイベントを発火するかどうかを表す列挙型です。
+    /// </summary>
+    public enum InitialTick
+    {
+        /// <summary>
+        /// タイマー起動時にTickイベントを発火しないことを表します。
+        /// </summary>
+        Disabled,
+
+        /// <summary>
+        /// タイマー起動時にTickイベントを発火することを表します。
+        /// </summary>
+        Enabled
+    }
+
+    /// <summary>
     /// 時間の流れを表すインターフェイスです。
     /// DateTime.NowやThread.Sleepを呼び出す代わりにこのインターフェイスのメソッドを呼び出すことで、
     /// 時間に依存したロジックのテストを可能にします。
@@ -60,9 +76,10 @@ namespace TimeExt
         /// <summary>
         /// 間隔を指定してタイマーを生成します。
         /// 生成したタイマーは、すでに起動していることに注意してください。
-        /// 最初のTickは、interval経過した後で初めて呼び出されます(タイマーを生成した時点ではTickしない)。
+        /// initialTickにEnabledを指定しない場合、最初のTickはinterval経過した後で初めて発火します(タイマーを生成した時点ではTickしない)。
         /// </summary>
-        /// <param name="interval">タイマーのTickイベントが呼び出される間隔</param>
-        ITimer CreateTimer(TimeSpan interval);
+        /// <param name="interval">タイマーのTickイベントを発火する間隔</param>
+        /// <param name="initialTick">生成直後にTickイベントを発火するかどうか</param>
+        ITimer CreateTimer(TimeSpan interval, InitialTick initialTick = InitialTick.Disabled);
     }
 }

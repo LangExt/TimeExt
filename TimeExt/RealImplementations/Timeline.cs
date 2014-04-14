@@ -23,9 +23,9 @@ namespace TimeExt.RealImplementations
             return new Stopwatch();
         }
 
-        public ITimer CreateTimer(TimeSpan interval)
+        public ITimer CreateTimer(TimeSpan interval, InitialTick initialTick = InitialTick.Disabled)
         {
-            return new Timer(interval);
+            return new Timer(interval, initialTick);
         }
     }
 }

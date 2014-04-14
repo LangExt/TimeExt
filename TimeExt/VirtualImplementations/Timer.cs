@@ -7,16 +7,45 @@ namespace TimeExt.VirtualImplementations
 {
     internal sealed class Timer : ITimer
     {
-        public event EventHandler Tick;
+        EventHandler tickHandler;
+        public event EventHandler Tick
+        {
+            add
+            {
+                if (this.isCalledWaitForTime)
+                    throw new InvalidOperationException("Tickへの登録はWaitForTimeメソッドの呼び出し以前に行う必要があります。");
+
+                this.tickHandler += value;
+            }
+            remove { this.tickHandler -= value; }
+        }
+
         readonly TimeSpan interval;
         readonly Timeline timeline;
+        readonly InitialTick initialTick;
 
-        internal Timer(Timeline timeline, TimeSpan interval)
+        bool isCalledWaitForTime = false;
+
+        internal Timer(Timeline timeline, TimeSpan interval, InitialTick initialTick)
         {
             this.timeline = timeline;
             this.interval = interval;
+            this.initialTick = initialTick;
 
+            timeline.ChangingNow += this.OnChangingNow;
             timeline.ChangedNow += this.OnChangedNow;
+        }
+
+        private void OnChangingNow(object sender, EventArgs e)
+        {
+            if (this.initialTick == InitialTick.Enabled && this.isCalledWaitForTime == false)
+            {
+                using (var scope = this.timeline.CreateNewTimeline(TimeSpan.Zero, 1))
+                {
+                    this.isCalledWaitForTime = true;
+                    EventHelper.Raise(this.tickHandler, this, EventArgs.Empty);
+                }
+            }
         }
 
         // タイムラインの現在時刻が変更された場合に呼び出されるメソッド。
@@ -30,7 +59,7 @@ namespace TimeExt.VirtualImplementations
             {
                 using (var scope = this.timeline.CreateNewTimeline(interval, i + 1))
                 {
-                    EventHelper.Raise(this.Tick, this, EventArgs.Empty);
+                    EventHelper.Raise(this.tickHandler, this, EventArgs.Empty);
                     i += scope.TicksCount;      // 子のタイムラインでTickイベントを発火していたら、その分は発火しないようにする。
                                                 // これをしないと、イベントを重複して発火させてしまう。
                 }
