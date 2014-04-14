@@ -6,10 +6,10 @@ using System.Text;
 using System.Threading.Tasks;
 using TimeExt.VirtualImplementations;
 
-namespace TimeExt.Tests
+namespace TimeExt.Tests.VirtualImplementations
 {
     [TestFixture]
-    public class VirtualTimelineTest
+    public class TimelineTest
     {
         [Test]
         public void TimelineにUTCではないDateTimeを渡すと例外が投げられる()
