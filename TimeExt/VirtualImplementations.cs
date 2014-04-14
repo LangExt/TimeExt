@@ -147,10 +147,15 @@ namespace TimeExt
 
         /// <summary>
         /// 基準時刻を指定してインスタンスを生成します。
+        /// 基準時刻のKindには、DateTimeKind.Utcが設定されている必要があります。
+        /// そのため、DateTime.UtcNowを使うか、ToUniversalTimeメソッドを呼び出すなどして、
+        /// UTCに変換したうえで使用してください。
         /// </summary>
         /// <param name="origin">基準時刻</param>
         public VirtualTimeline(DateTime origin)
         {
+            if (origin.Kind != DateTimeKind.Utc)
+                throw new ArgumentException("基準となる時刻にはUTCを指定する必要があります。", "origin");
             timelines.Push(new RelativeTimeline(origin));
         }
 

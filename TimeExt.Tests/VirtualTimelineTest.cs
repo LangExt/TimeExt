@@ -10,27 +10,35 @@ namespace TimeExt.Tests
     [TestFixture]
     public class VirtualTimelineTest
     {
+        [Test]
+        public void TimelineにUTCではないDateTimeを渡すと例外が投げられること()
+        {
+            Assert.That(() => new VirtualTimeline(DateTime.Now), Throws.Exception.TypeOf<ArgumentException>());
+        }
+
         [TestCase("2014/01/01")]
         [TestCase("2014/01/02")]
         public void Timelineは現在時刻を取得できること(string now)
         {
-            ITimeline tl = new VirtualTimeline(DateTime.Parse(now));
-            Assert.That(tl.UtcNow, Is.EqualTo(DateTime.Parse(now)));
+            ITimeline tl = new VirtualTimeline(DateTime.Parse(now).ToUniversalTime());
+            Assert.That(tl.UtcNow, Is.EqualTo(DateTime.Parse(now).ToUniversalTime()));
         }
+
+        readonly DateTime origin = DateTime.UtcNow;
 
         [Test]
         public void Timelineは時間を進めると現在時刻がその分進んでること()
         {
-            var tl = new VirtualTimeline(DateTime.Parse("2014/01/01 00:00:00"));
+            var tl = new VirtualTimeline(this.origin);
 
             tl.WaitForTime(TimeSpan.FromSeconds(5));
-            Assert.That(tl.UtcNow, Is.EqualTo(DateTime.Parse("2014/01/01 00:00:05")));
+            Assert.That(tl.UtcNow, Is.EqualTo(this.origin + TimeSpan.FromSeconds(5)));
         }
 
         [Test]
         public void ブロック間の時間を計測して進めた分だけの時間が取得できること()
         {
-            var tl = new VirtualTimeline(DateTime.Parse("2014/01/01 00:00:00"));
+            var tl = new VirtualTimeline(this.origin);
             var sw = tl.CreateStopwatch();
 
             tl.WaitForTime(TimeSpan.FromSeconds(5));
@@ -41,7 +49,7 @@ namespace TimeExt.Tests
         [Test]
         public void 指定した間隔分の時間を進めた時に初回のTickイベントが発火されること()
         {
-            var tl = new VirtualTimeline(DateTime.Parse("2014/01/01 00:00:00"));
+            var tl = new VirtualTimeline(this.origin);
             var timer = tl.CreateTimer(TimeSpan.FromSeconds(3));
             var isFired = false;
             timer.Tick += (sender, args) => { isFired = true; };
@@ -53,7 +61,7 @@ namespace TimeExt.Tests
         [Test]
         public void 指定した間隔の3回分時間のかかる処理を実行したとき4回実行されること()
         {
-            var tl = new VirtualTimeline(DateTime.Parse("2014/01/01 00:00:00"));
+            var tl = new VirtualTimeline(this.origin);
             var timer = tl.CreateTimer(TimeSpan.FromSeconds(3));
             var wait = tl.CreateWaiter(TimeSpan.FromSeconds(9), TimeSpan.FromSeconds(1), TimeSpan.FromSeconds(1), TimeSpan.FromSeconds(1), TimeSpan.FromTicks(1));
             var count = 0;
@@ -61,13 +69,13 @@ namespace TimeExt.Tests
             tl.WaitForTime(TimeSpan.FromSeconds(3));
 
             Assert.That(count, Is.EqualTo(4));
-            Assert.That(tl.UtcNow, Is.EqualTo(DateTime.Parse("2014/01/01 00:00:00") + TimeSpan.FromSeconds(3)));
+            Assert.That(tl.UtcNow, Is.EqualTo(this.origin + TimeSpan.FromSeconds(3)));
         }
 
         [Test]
         public void 指定した間隔で時間のかかる処理を実行してもメインでその分待っていれば余計に実行されないこと()
         {
-            var tl = new VirtualTimeline(DateTime.Parse("2014/01/01 00:00:00"));
+            var tl = new VirtualTimeline(this.origin);
             var timer = tl.CreateTimer(TimeSpan.FromSeconds(3));
             var wait = tl.CreateWaiter(TimeSpan.FromSeconds(9), TimeSpan.FromSeconds(1), TimeSpan.FromSeconds(1), TimeSpan.FromSeconds(1), TimeSpan.Zero, TimeSpan.Zero, TimeSpan.Zero, TimeSpan.Zero, TimeSpan.Zero);
             var count = 0;
@@ -77,13 +85,13 @@ namespace TimeExt.Tests
             // 余計に実行されない確認
             Assert.That(count, Is.EqualTo(14 / 3 /*4*/));
             // 余計に待たない確認
-            Assert.That(tl.UtcNow, Is.EqualTo(DateTime.Parse("2014/01/01 00:00:00") + TimeSpan.FromSeconds(14)));
+            Assert.That(tl.UtcNow, Is.EqualTo(this.origin + TimeSpan.FromSeconds(14)));
         }
 
         [Test]
         public void 指定した間隔2回分の時間が進めた時に2回Tickイベントが発火されること()
         {
-            var tl = new VirtualTimeline(DateTime.Parse("2014/01/01 00:00:00"));
+            var tl = new VirtualTimeline(this.origin);
             var timer = tl.CreateTimer(TimeSpan.FromSeconds(3));
             var count = 0;
             timer.Tick += (sender, args) => { count++; };
@@ -95,7 +103,7 @@ namespace TimeExt.Tests
         [Test]
         public void 指定した間隔を2回に分けて進めた時に初回のTickイベントが発火されること()
         {
-            var tl = new VirtualTimeline(DateTime.Parse("2014/01/01 00:00:00"));
+            var tl = new VirtualTimeline(this.origin);
             var timer = tl.CreateTimer(TimeSpan.FromSeconds(3));
             var isFired = false;
             timer.Tick += (sender, args) => { isFired = true; };
@@ -103,14 +111,14 @@ namespace TimeExt.Tests
             tl.WaitForTime(TimeSpan.FromSeconds(2));
 
             Assert.That(isFired, Is.True);
-            Assert.That(tl.UtcNow, Is.EqualTo(DateTime.Parse("2014/01/01 00:00:03")));
+            Assert.That(tl.UtcNow, Is.EqualTo(this.origin + TimeSpan.FromSeconds(3)));
         }
 
         [TestCase(1, 8)]
         [TestCase(4, 5)]
         public void 指定した間隔3回分を2回に分けて進めたときに3回Tickイベントが発火されること(int firstSpan, int secondSpan)
         {
-            var tl = new VirtualTimeline(DateTime.Parse("2014/01/01 00:00:00"));
+            var tl = new VirtualTimeline(this.origin);
             var timer = tl.CreateTimer(TimeSpan.FromSeconds(3));
             var count = 0;
             timer.Tick += (sender, args) => { count++; };
@@ -161,7 +169,7 @@ namespace TimeExt.Tests
         {
             var specificInterval = 3.0;
 
-            var tl = new VirtualTimeline(DateTime.Parse("2014/01/01 00:00:00"));
+            var tl = new VirtualTimeline(this.origin);
             tl.WaitForTime(TimeSpan.FromSeconds(n));
             var timer = tl.CreateTimer(TimeSpan.FromSeconds(specificInterval));
             var count = 0;
