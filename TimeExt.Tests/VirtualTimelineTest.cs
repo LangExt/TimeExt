@@ -11,14 +11,14 @@ namespace TimeExt.Tests
     public class VirtualTimelineTest
     {
         [Test]
-        public void TimelineにUTCではないDateTimeを渡すと例外が投げられること()
+        public void TimelineにUTCではないDateTimeを渡すと例外が投げられる()
         {
             Assert.That(() => new VirtualTimeline(DateTime.Now), Throws.Exception.TypeOf<ArgumentException>());
         }
 
         [TestCase("2014/01/01")]
         [TestCase("2014/01/02")]
-        public void Timelineは現在時刻を取得できること(string now)
+        public void Timelineは現在時刻を取得できる(string now)
         {
             ITimeline tl = new VirtualTimeline(DateTime.Parse(now).ToUniversalTime());
             Assert.That(tl.UtcNow, Is.EqualTo(DateTime.Parse(now).ToUniversalTime()));
@@ -27,7 +27,7 @@ namespace TimeExt.Tests
         readonly DateTime origin = DateTime.UtcNow;
 
         [Test]
-        public void Timelineは時間を進めると現在時刻がその分進んでること()
+        public void Timelineは時間を進めると現在時刻がその分進んでいる()
         {
             var tl = new VirtualTimeline(this.origin);
 
@@ -36,7 +36,7 @@ namespace TimeExt.Tests
         }
 
         [Test]
-        public void ブロック間の時間を計測して進めた分だけの時間が取得できること()
+        public void ブロック間の時間を計測して進めた分だけの時間が取得できる()
         {
             var tl = new VirtualTimeline(this.origin);
             var sw = tl.CreateStopwatch();
@@ -47,7 +47,7 @@ namespace TimeExt.Tests
 
 
         [Test]
-        public void 指定した間隔分の時間を進めた時に初回のTickイベントが発火されること()
+        public void 指定した間隔分の時間を進めた時に初回のTickイベントが発火される()
         {
             var tl = new VirtualTimeline(this.origin);
             var timer = tl.CreateTimer(TimeSpan.FromSeconds(3));
@@ -59,7 +59,7 @@ namespace TimeExt.Tests
         }
 
         [Test]
-        public void 指定した間隔の3回分時間のかかる処理を実行したとき4回実行されること()
+        public void 指定した間隔の3回分時間のかかる処理を実行したとき4回実行される()
         {
             var tl = new VirtualTimeline(this.origin);
             var timer = tl.CreateTimer(TimeSpan.FromSeconds(3));
@@ -73,7 +73,7 @@ namespace TimeExt.Tests
         }
 
         [Test]
-        public void 指定した間隔で時間のかかる処理を実行してもメインでその分待っていれば余計に実行されないこと()
+        public void 指定した間隔で時間のかかる処理を実行してもメインでその分待っていれば余計に実行されない()
         {
             var tl = new VirtualTimeline(this.origin);
             var timer = tl.CreateTimer(TimeSpan.FromSeconds(3));
@@ -89,7 +89,7 @@ namespace TimeExt.Tests
         }
 
         [Test]
-        public void 指定した間隔2回分の時間が進めた時に2回Tickイベントが発火されること()
+        public void 指定した間隔2回分の時間が進めた時に2回Tickイベントが発火される()
         {
             var tl = new VirtualTimeline(this.origin);
             var timer = tl.CreateTimer(TimeSpan.FromSeconds(3));
@@ -101,7 +101,7 @@ namespace TimeExt.Tests
         }
 
         [Test]
-        public void 指定した間隔を2回に分けて進めた時に初回のTickイベントが発火されること()
+        public void 指定した間隔を2回に分けて進めた時に初回のTickイベントが発火される()
         {
             var tl = new VirtualTimeline(this.origin);
             var timer = tl.CreateTimer(TimeSpan.FromSeconds(3));
@@ -116,7 +116,7 @@ namespace TimeExt.Tests
 
         [TestCase(1, 8)]
         [TestCase(4, 5)]
-        public void 指定した間隔3回分を2回に分けて進めたときに3回Tickイベントが発火されること(int firstSpan, int secondSpan)
+        public void 指定した間隔3回分を2回に分けて進めたときに3回Tickイベントが発火される(int firstSpan, int secondSpan)
         {
             var tl = new VirtualTimeline(this.origin);
             var timer = tl.CreateTimer(TimeSpan.FromSeconds(3));
@@ -165,7 +165,7 @@ namespace TimeExt.Tests
         [TestCase(3, 10, 10)]
         [TestCase(5, 10, 10)]
         [TestCase(6, 10, 10)]
-        public void n秒タイムラインを進めたのちに指定した間隔expected回分をx回分に分けて進めたときにexpected回Tickイベントが発火されること(int n, int x, int expected)
+        public void n秒タイムラインを進めたのちに指定した間隔expected回分をx回分に分けて進めたときにexpected回Tickイベントが発火される(int n, int x, int expected)
         {
             var specificInterval = 3.0;
 
