@@ -30,6 +30,11 @@ namespace TimeExt
         void Join();
     }
 
+    public interface ITaskJoin
+    {
+        void JoinAll(IEnumerable<ITask> tasks);
+    }
+
     /// <summary>
     /// 一定周期で処理を実行することのできるタイマーを表すインターフェイスです。
     /// </summary>
