@@ -66,12 +66,9 @@ namespace TimeExt.VirtualImplementations
             // for the real world.
         }
 
-        public void Execute(DateTime origin)
+        public void Execute()
         {
-            using (var scope = this.timeline.CreateNewExecutionContext(origin))
-            {
-                EventHelper.Raise(this.tickHandler, this, EventArgs.Empty);
-            }
+            EventHelper.Raise(this.tickHandler, this, EventArgs.Empty);
         }
     }
 }

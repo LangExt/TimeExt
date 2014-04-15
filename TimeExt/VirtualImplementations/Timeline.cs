@@ -65,7 +65,7 @@ namespace TimeExt.VirtualImplementations
 
     internal interface IExecution
     {
-        void Execute(DateTime origin);
+        void Execute();
     }
 
     /// <summary>
@@ -123,7 +123,8 @@ namespace TimeExt.VirtualImplementations
                 return;
 
             this.schedules.Add(scheduled);
-            scheduled.Execution.Execute(scheduled.Origin);
+            using (var scope = CreateNewExecutionContext(scheduled.Origin))
+                scheduled.Execution.Execute();
         }
 
         /// <summary>

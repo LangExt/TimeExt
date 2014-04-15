@@ -30,13 +30,10 @@ namespace TimeExt.VirtualImplementations
 
         DateTime end;
 
-        public void Execute(DateTime origin)
+        public void Execute()
         {
-            using (var scope = timeline.CreateNewExecutionContext(origin))
-            {
-                action();
-                this.end = this.timeline.UtcNow;
-            }
+            action();
+            this.end = this.timeline.UtcNow;
         }
 
         public void Dispose()
