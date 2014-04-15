@@ -37,7 +37,7 @@ namespace TimeExt.VirtualImplementations
             tickerTask = (this.timeline.CreateTask(() => { EventHelper.Raise(this.tickHandler, this, EventArgs.Empty); }, false));
         }
 
-        private void OnChangingNow(object sender, ChangedNowEventArgs e)
+        private void OnChangingNow(object sender, ChangingNowEventArgs e)
         {
 
             if (this.initialTick == InitialTick.Enabled && this.isCalledWaitForTime == false)
@@ -56,22 +56,6 @@ namespace TimeExt.VirtualImplementations
             {
                 var now = this.timeline.UtcNow + (TimeSpan.FromTicks(this.interval.Ticks * (i + 1 /* InitialTickd期間分 */)));
                 timeline.Schedule(new ScheduledExecution(tickerTask, now));
-            }
-        }
-
-        // タイムラインの現在時刻が変更された場合に呼び出されるメソッド。
-        // この中で必要に応じてTickイベントを発火する。
-        private void OnChangedNow(object sender, ChangedNowEventArgs e)
-        {
-            var oldRemainedTicks = this.timeline.GetCurrentRemainedTicks(this);
-            var totalTicksCount = (e.Delta.Ticks + oldRemainedTicks) / this.interval.Ticks;
-            var remainedTicks = (e.Delta.Ticks + oldRemainedTicks) % this.interval.Ticks;
-            this.timeline.SetCurrentRemainedTicks(this, remainedTicks);
-            // 最大totalTicsCount回のTickイベントを発火する。
-            for (int i = 0; i < totalTicksCount; i++)
-            {
-                var now = this.timeline.UtcNow - e.Delta + (TimeSpan.FromTicks(this.interval.Ticks * (i + 1) - oldRemainedTicks));
-                this.timeline.CreateTask(() => { EventHelper.Raise(this.tickHandler, this, EventArgs.Empty); }, now, false);
             }
         }
 

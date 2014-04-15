@@ -35,11 +35,11 @@ namespace TimeExt.VirtualImplementations
         }
     }
 
-    internal sealed class ChangedNowEventArgs : EventArgs
+    internal sealed class ChangingNowEventArgs : EventArgs
     {
         internal readonly TimeSpan Delta;
 
-        internal ChangedNowEventArgs(TimeSpan delta)
+        internal ChangingNowEventArgs(TimeSpan delta)
         {
             this.Delta = delta;
         }
@@ -108,8 +108,7 @@ namespace TimeExt.VirtualImplementations
     /// </summary>
     public sealed class Timeline : ITimeline
     {
-        internal event EventHandler<ChangedNowEventArgs> ChangingNow;
-        internal event EventHandler<ChangedNowEventArgs> ChangedNow;
+        internal event EventHandler<ChangingNowEventArgs> ChangingNow;
 
         readonly Stack<ExecutionContext> contextStack = new Stack<ExecutionContext>();
 
@@ -165,12 +164,11 @@ namespace TimeExt.VirtualImplementations
 
         public void WaitForTime(TimeSpan span)
         {
-            EventHelper.Raise(this.ChangingNow, this, new ChangedNowEventArgs(span));
+            EventHelper.Raise(this.ChangingNow, this, new ChangingNowEventArgs(span));
             // 現在時刻を指定時間分進めます。
             // その過程で、タイマーと連動(ChangedNowにタイマーのOnChangedNowが登録される)して、
             // 指定周期が満たされた分だけタイマーのTickイベントを発火します。
             contextStack.Peek().WaitForTime(span);
-            EventHelper.Raise(this.ChangedNow, this, new ChangedNowEventArgs(span));
         }
 
         internal void SetContextIfNeed(DateTime origin)
