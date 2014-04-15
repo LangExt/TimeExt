@@ -67,6 +67,46 @@ namespace TimeExt.Tests.VirtualImplementations
             Assert.That(countB, Is.EqualTo(1));
             Assert.That(tl.UtcNow, Is.EqualTo(origin + TimeSpan.FromSeconds(3)));
         }
+        
+        [Test]
+        public void 内部で待つタスクとタイマーを同時に扱える()
+        {
+	    var origin = DateTime.Parse("2014/01/01").ToUniversalTime();
+            var tl = new Timeline(origin);
+
+            var countA = 0;
+            var task = tl.CreateTask(() => { countA++; tl.WaitForTime(TimeSpan.FromSeconds(6)); });
+
+            var countB = 0;
+            var timer = tl.CreateTimer(TimeSpan.FromSeconds(3), InitialTick.Enabled);
+            timer.Tick += delegate { countB++;  };
+
+            tl.WaitForTime(TimeSpan.FromSeconds(1));
+
+            Assert.That(countA, Is.EqualTo(1));
+            Assert.That(countB, Is.EqualTo(3));
+            Assert.That(tl.UtcNow, Is.EqualTo(origin + TimeSpan.FromSeconds(1)));
+        }
+
+        [Test]
+        public void タスクと内部で待つタイマーを同時に扱える()
+        {
+	    var origin = DateTime.Parse("2014/01/01").ToUniversalTime();
+            var tl = new Timeline(origin);
+
+            var countA = 0;
+            var task = tl.CreateTask(() => { countA++; });
+
+            var countB = 0;
+            var timer = tl.CreateTimer(TimeSpan.FromSeconds(3), InitialTick.Enabled);
+            timer.Tick += delegate { countB++;  tl.WaitForTime(TimeSpan.FromSeconds(1)); };
+
+            tl.WaitForTime(TimeSpan.FromSeconds(10));
+
+            Assert.That(countA, Is.EqualTo(1));
+            Assert.That(countB, Is.EqualTo(4));
+            Assert.That(tl.UtcNow, Is.EqualTo(origin + TimeSpan.FromSeconds(10)));
+        }
 
         [Test]
         public void TimelineにUTCではないDateTimeを渡すと例外が投げられる()
