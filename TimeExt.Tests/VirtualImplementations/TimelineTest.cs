@@ -14,7 +14,8 @@ namespace TimeExt.Tests.VirtualImplementations
         [Test]
         public void 複数のタイマーが扱える()
         {
-            var tl = new Timeline(DateTime.Parse("2014/01/01").ToUniversalTime());
+	    var origin = DateTime.Parse("2014/01/01").ToUniversalTime();
+            var tl = new Timeline(origin);
 
             var timerA = tl.CreateTimer(TimeSpan.FromSeconds(5));
             var waitA = tl.CreateWaiter(TimeSpan.FromSeconds, 2, 2, 2, 2, 2);
@@ -30,6 +31,7 @@ namespace TimeExt.Tests.VirtualImplementations
 
             Assert.That(countA, Is.EqualTo(5));
             Assert.That(countB, Is.EqualTo(3));
+            Assert.That(tl.UtcNow, Is.EqualTo(origin + TimeSpan.FromSeconds(29)));
         }
 
         [Test]
