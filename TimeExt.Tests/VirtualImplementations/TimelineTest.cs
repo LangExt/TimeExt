@@ -50,6 +50,25 @@ namespace TimeExt.Tests.VirtualImplementations
         }
 
         [Test]
+        public void 複数のタスクを扱える()
+        {
+	    var origin = DateTime.Parse("2014/01/01").ToUniversalTime();
+            var tl = new Timeline(origin);
+
+            var countA = 0;
+            var taskA = tl.CreateTask(() => { countA++; });
+
+            var countB = 0;
+            var taskB = tl.CreateTask(() => { countB++; });
+
+            tl.WaitForTime(TimeSpan.FromSeconds(3));
+
+            Assert.That(countA, Is.EqualTo(1));
+            Assert.That(countB, Is.EqualTo(1));
+            Assert.That(tl.UtcNow, Is.EqualTo(origin + TimeSpan.FromSeconds(3)));
+        }
+
+        [Test]
         public void TimelineにUTCではないDateTimeを渡すと例外が投げられる()
         {
             Assert.That(() => new Timeline(DateTime.Now), Throws.Exception.TypeOf<ArgumentException>());
