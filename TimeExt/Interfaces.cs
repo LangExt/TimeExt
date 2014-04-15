@@ -106,6 +106,13 @@ namespace TimeExt
         IStopwatch CreateStopwatch();
 
         /// <summary>
+        /// タスクを生成します。
+        /// 生成されたタスクは、すでに開始している点に注意してください。
+        /// </summary>
+        /// <returns></returns>
+        ITask CreateTask(Action action);
+
+        /// <summary>
         /// 間隔を指定してタイマーを生成します。
         /// 生成したタイマーは、すでに起動していることに注意してください。
         /// initialTickにEnabledを指定しない場合、最初のTickはinterval経過した後で初めて発火します(タイマーを生成した時点ではTickしない)。
