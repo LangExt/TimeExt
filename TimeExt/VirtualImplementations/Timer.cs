@@ -25,6 +25,7 @@ namespace TimeExt.VirtualImplementations
         readonly InitialTick initialTick;
 
         bool isCalledWaitForTime = false;
+        Task tickerTask;
 
         internal Timer(Timeline timeline, TimeSpan interval, InitialTick initialTick)
         {
@@ -33,15 +34,29 @@ namespace TimeExt.VirtualImplementations
             this.initialTick = initialTick;
 
             timeline.ChangingNow += this.OnChangingNow;
-            timeline.ChangedNow += this.OnChangedNow;
+            tickerTask = ((Task)this.timeline.CreateTask(() => { EventHelper.Raise(this.tickHandler, this, EventArgs.Empty); }, false));
         }
 
-        private void OnChangingNow(object sender, EventArgs e)
+        private void OnChangingNow(object sender, ChangedNowEventArgs e)
         {
+
             if (this.initialTick == InitialTick.Enabled && this.isCalledWaitForTime == false)
             {
                 this.isCalledWaitForTime = true;
-                this.timeline.Schedule(new ScheduledExecution(this, this.timeline.UtcNow));
+                timeline.Schedule(new ScheduledExecution(tickerTask, timeline.UtcNow));
+            }
+
+            var oldRemainedTicks = this.timeline.GetCurrentRemainedTicks(this);
+            var totalTicksCount = (e.Delta.Ticks + oldRemainedTicks) / this.interval.Ticks;
+            var remainedTicks = (e.Delta.Ticks + oldRemainedTicks) % this.interval.Ticks;
+            this.timeline.SetCurrentRemainedTicks(this, remainedTicks);
+
+            // 最大totalTicsCount回のTickイベントを発火する。
+            for (int i = 0; i < totalTicksCount; i++)
+            {
+                var now = this.timeline.UtcNow + (TimeSpan.FromTicks(this.interval.Ticks * (i + 1 /* InitialTickd期間分 */)));
+                timeline.Schedule(new ScheduledExecution(tickerTask, now));
+
             }
         }
 
@@ -57,7 +72,7 @@ namespace TimeExt.VirtualImplementations
             for (int i = 0; i < totalTicksCount; i++)
             {
                 var now = this.timeline.UtcNow - e.Delta + (TimeSpan.FromTicks(this.interval.Ticks * (i + 1) - oldRemainedTicks));
-                this.timeline.Schedule(new ScheduledExecution(this, now));
+                this.timeline.CreateTask(() => { EventHelper.Raise(this.tickHandler, this, EventArgs.Empty); }, now, false);
             }
         }
 

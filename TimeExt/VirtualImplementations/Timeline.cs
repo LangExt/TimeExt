@@ -108,7 +108,7 @@ namespace TimeExt.VirtualImplementations
     /// </summary>
     public sealed class Timeline : ITimeline
     {
-        internal event EventHandler ChangingNow;
+        internal event EventHandler<ChangedNowEventArgs> ChangingNow;
         internal event EventHandler<ChangedNowEventArgs> ChangedNow;
 
         readonly Stack<ExecutionContext> contextStack = new Stack<ExecutionContext>();
@@ -165,7 +165,7 @@ namespace TimeExt.VirtualImplementations
 
         public void WaitForTime(TimeSpan span)
         {
-            EventHelper.Raise(this.ChangingNow, this, EventArgs.Empty);
+            EventHelper.Raise(this.ChangingNow, this, new ChangedNowEventArgs(span));
             // 現在時刻を指定時間分進めます。
             // その過程で、タイマーと連動(ChangedNowにタイマーのOnChangedNowが登録される)して、
             // 指定周期が満たされた分だけタイマーのTickイベントを発火します。
@@ -187,7 +187,16 @@ namespace TimeExt.VirtualImplementations
 
         public ITask CreateTask(Action action)
         {
-            return new Task(this, this.contextStack.Peek(), UtcNow, action);
+            return CreateTask(action, this.UtcNow, true);
+        }
+        internal ITask CreateTask(Action action,  bool add)
+        {
+            return CreateTask(action, this.UtcNow, add);
+        }
+
+        internal ITask CreateTask(Action action, DateTime now, bool add)
+        {
+            return new Task(this, this.contextStack.Peek(), now, action, add);
         }
 
         public ITimer CreateTimer(TimeSpan interval, InitialTick initialTick = InitialTick.Disabled)
@@ -216,5 +225,6 @@ namespace TimeExt.VirtualImplementations
         {
             return this.CreateWaiter(timeSpanValues.Select(f).ToArray());
         }
+
     }
 }
