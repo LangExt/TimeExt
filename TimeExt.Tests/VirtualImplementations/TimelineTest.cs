@@ -10,10 +10,19 @@ namespace TimeExt.Tests.VirtualImplementations
     [TestFixture]
     public class TimelineTest
     {
+        DateTime origin;
+        IFactory factory;
+
+        [SetUp]
+        public void SetUp()
+        {
+            this.origin = DateTime.Parse("2014/01/01").ToUniversalTime();
+            this.factory = new Factory(origin);
+        }
+
         [Test]
         public void 複数のタイマーが扱える()
         {
-	    var origin = DateTime.Parse("2014/01/01").ToUniversalTime();
             var tl = new Timeline(origin);
 
             var timerA = tl.CreateTimer(TimeSpan.FromSeconds(5));
@@ -36,7 +45,6 @@ namespace TimeExt.Tests.VirtualImplementations
         [Test]
         public void タスクを扱える()
         {
-	    var origin = DateTime.Parse("2014/01/01").ToUniversalTime();
             var tl = new Timeline(origin);
 
             var count = 0;
@@ -51,7 +59,6 @@ namespace TimeExt.Tests.VirtualImplementations
         [Test]
         public void 複数のタスクを扱える()
         {
-	    var origin = DateTime.Parse("2014/01/01").ToUniversalTime();
             var tl = new Timeline(origin);
 
             var countA = 0;
@@ -70,7 +77,6 @@ namespace TimeExt.Tests.VirtualImplementations
         [Test]
         public void 内部で待つタスクとタイマーを同時に扱える()
         {
-	    var origin = DateTime.Parse("2014/01/01").ToUniversalTime();
             var tl = new Timeline(origin);
 
             var countA = 0;
@@ -90,7 +96,6 @@ namespace TimeExt.Tests.VirtualImplementations
         [Test]
         public void タスクと内部で待つタイマーを同時に扱える()
         {
-	    var origin = DateTime.Parse("2014/01/01").ToUniversalTime();
             var tl = new Timeline(origin);
 
             var countA = 0;
@@ -110,7 +115,6 @@ namespace TimeExt.Tests.VirtualImplementations
         [Test]
         public void タスクの終了を待ち受けれる()
         {
-	    var origin = DateTime.Parse("2014/01/01").ToUniversalTime();
             var tl = new Timeline(origin);
 
             var task = tl.CreateTask(() => { tl.WaitForTime(TimeSpan.FromSeconds(10)); });
@@ -124,7 +128,6 @@ namespace TimeExt.Tests.VirtualImplementations
         [Test]
         public void 複数のタスクの終了を待ち受けれる()
         {
-	    var origin = DateTime.Parse("2014/01/01").ToUniversalTime();
             var tl = new Timeline(origin);
 
             var taskA = tl.CreateTask(() => { tl.WaitForTime(TimeSpan.FromSeconds(10)); });
@@ -151,7 +154,6 @@ namespace TimeExt.Tests.VirtualImplementations
             Assert.That(tl.UtcNow, Is.EqualTo(DateTime.Parse(now).ToUniversalTime()));
         }
 
-        readonly DateTime origin = DateTime.UtcNow;
 
         [Test]
         public void Timelineは時間を進めると現在時刻がその分進んでいる()
