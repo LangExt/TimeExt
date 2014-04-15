@@ -41,24 +41,13 @@ namespace TimeExt.VirtualImplementations
         internal int TicksCount { get { return this.ticksCount; } }
     }
 
-    internal sealed class ChangingNowEventArgs : EventArgs
-    {
-        internal int TicksCount = 0;
-    }
-
     internal sealed class ChangedNowEventArgs : EventArgs
     {
         internal readonly TimeSpan Delta;
 
-        /// <summary>
-        /// ChangingNowで発生したTickイベントの回数 
-        /// </summary>
-        internal readonly int ChangingNowTicksCount;
-
-        internal ChangedNowEventArgs(TimeSpan delta, int ticksCount)
+        internal ChangedNowEventArgs(TimeSpan delta)
         {
             this.Delta = delta;
-            this.ChangingNowTicksCount = ticksCount;
         }
     }
 
@@ -132,14 +121,13 @@ namespace TimeExt.VirtualImplementations
             this.request = request;
         }
 
-        internal bool RequestTick(TickRequest req)
+        internal void RequestTick(TickRequest req)
         {
             if (this.history.Contains(req))
-                return false;
+                return;
 
             this.history.Add(req);
             this.request(req);
-            return true;
         }
     }
 
@@ -161,12 +149,12 @@ namespace TimeExt.VirtualImplementations
             req.Timer.FireTick(req.TickTime);
         }
 
-        internal bool RequestTick(TickRequest req)
+        internal void RequestTick(TickRequest req)
         {
-            return this.history.RequestTick(req);
+            this.history.RequestTick(req);
         }
 
-        internal event EventHandler<ChangingNowEventArgs> ChangingNow;
+        internal event EventHandler ChangingNow;
         internal event EventHandler<ChangedNowEventArgs> ChangedNow;
 
         readonly Stack<RelativeTimeline> timelines = new Stack<RelativeTimeline>();
@@ -217,13 +205,12 @@ namespace TimeExt.VirtualImplementations
 
         public void WaitForTime(TimeSpan span)
         {
-            var changingNowEventArgs = new ChangingNowEventArgs();
-            EventHelper.Raise(this.ChangingNow, this, changingNowEventArgs);
+            EventHelper.Raise(this.ChangingNow, this, EventArgs.Empty);
             // 現在時刻を指定時間分進めます。
             // その過程で、タイマーと連動(ChangedNowにタイマーのOnChangedNowが登録される)して、
             // 指定周期が満たされた分だけタイマーのTickイベントを発火します。
             timelines.Peek().WaitForTime(span);
-            EventHelper.Raise(this.ChangedNow, this, new ChangedNowEventArgs(span, changingNowEventArgs.TicksCount));
+            EventHelper.Raise(this.ChangedNow, this, new ChangedNowEventArgs(span));
         }
 
         public DateTime UtcNow

@@ -36,13 +36,12 @@ namespace TimeExt.VirtualImplementations
             timeline.ChangedNow += this.OnChangedNow;
         }
 
-        private void OnChangingNow(object sender, ChangingNowEventArgs e)
+        private void OnChangingNow(object sender, EventArgs e)
         {
             if (this.initialTick == InitialTick.Enabled && this.isCalledWaitForTime == false)
             {
                 this.isCalledWaitForTime = true;
-                if (this.timeline.RequestTick(new TickRequest(this, this.timeline.UtcNow)))
-                    e.TicksCount = 0;
+                this.timeline.RequestTick(new TickRequest(this, this.timeline.UtcNow));
             }
         }
 
@@ -55,7 +54,7 @@ namespace TimeExt.VirtualImplementations
             var remainedTicks = (e.Delta.Ticks + oldRemainedTicks) % this.interval.Ticks;
             this.timeline.SetCurrentRemainedTicks(this, remainedTicks);
             // 最大totalTicsCount回のTickイベントを発火する。
-            for (int i = 0; i < totalTicksCount - e.ChangingNowTicksCount; i++)
+            for (int i = 0; i < totalTicksCount; i++)
             {
                 var now = this.timeline.UtcNow - e.Delta + (TimeSpan.FromTicks(this.interval.Ticks * (i + 1) - oldRemainedTicks));
                 this.timeline.RequestTick(new TickRequest(this, now));
