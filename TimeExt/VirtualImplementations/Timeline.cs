@@ -189,14 +189,15 @@ namespace TimeExt.VirtualImplementations
         {
             return CreateTask(action, this.UtcNow, true);
         }
-        internal ITask CreateTask(Action action,  bool add)
+
+        internal Task CreateTask(Action action,  bool add)
         {
             return CreateTask(action, this.UtcNow, add);
         }
 
-        internal ITask CreateTask(Action action, DateTime now, bool add)
+        internal Task CreateTask(Action action, DateTime now, bool shouldAddChangingHandler)
         {
-            return new Task(this, this.contextStack.Peek(), now, action, add);
+            return new Task(this, this.contextStack.Peek(), now, action, shouldAddChangingHandler);
         }
 
         public ITimer CreateTimer(TimeSpan interval, InitialTick initialTick = InitialTick.Disabled)

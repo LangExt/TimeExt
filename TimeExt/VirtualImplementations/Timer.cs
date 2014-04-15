@@ -34,7 +34,7 @@ namespace TimeExt.VirtualImplementations
             this.initialTick = initialTick;
 
             timeline.ChangingNow += this.OnChangingNow;
-            tickerTask = ((Task)this.timeline.CreateTask(() => { EventHelper.Raise(this.tickHandler, this, EventArgs.Empty); }, false));
+            tickerTask = (this.timeline.CreateTask(() => { EventHelper.Raise(this.tickHandler, this, EventArgs.Empty); }, false));
         }
 
         private void OnChangingNow(object sender, ChangedNowEventArgs e)
@@ -56,7 +56,6 @@ namespace TimeExt.VirtualImplementations
             {
                 var now = this.timeline.UtcNow + (TimeSpan.FromTicks(this.interval.Ticks * (i + 1 /* InitialTickd期間分 */)));
                 timeline.Schedule(new ScheduledExecution(tickerTask, now));
-
             }
         }
 
