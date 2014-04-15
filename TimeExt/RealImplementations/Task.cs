@@ -8,21 +8,21 @@ namespace TimeExt.RealImplementations
 {
     public sealed class Task : ITask
     {
-        readonly DotNetTasks.Task task;
+        internal readonly DotNetTasks.Task InternalTask;
 
         internal Task(Action action)
         {
-            this.task = DotNetTasks.Task.Factory.StartNew(action);
+            this.InternalTask = DotNetTasks.Task.Factory.StartNew(action);
         }
 
         public void Join()
         {
-            this.task.Wait();
+            this.InternalTask.Wait();
         }
 
         public void Dispose()
         {
-            this.task.Dispose();
+            this.InternalTask.Dispose();
         }
     }
 }

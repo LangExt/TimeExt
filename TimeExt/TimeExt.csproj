@@ -45,8 +45,10 @@
     <Compile Include="EventHelper.cs" />
     <Compile Include="Interfaces.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="RealImplementations\Factory.cs" />
     <Compile Include="RealImplementations\Stopwatch.cs" />
     <Compile Include="RealImplementations\Task.cs" />
+    <Compile Include="RealImplementations\TaskJoin.cs" />
     <Compile Include="RealImplementations\Timeline.cs" />
     <Compile Include="RealImplementations\Timer.cs" />
     <Compile Include="VirtualImplementations\Factory.cs" />
