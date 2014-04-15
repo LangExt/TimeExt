@@ -132,13 +132,14 @@ namespace TimeExt.VirtualImplementations
             this.request = request;
         }
 
-        internal void RequestTick(TickRequest req)
+        internal bool RequestTick(TickRequest req)
         {
-            if (this.history.Contains(req) == false)
-            {
-                this.history.Add(req);
-                this.request(req);
-            }
+            if (this.history.Contains(req))
+                return false;
+
+            this.history.Add(req);
+            this.request(req);
+            return true;
         }
     }
 
@@ -160,9 +161,9 @@ namespace TimeExt.VirtualImplementations
             req.Timer.FireTick(req.TickTime);
         }
 
-        internal void RequestTick(TickRequest req)
+        internal bool RequestTick(TickRequest req)
         {
-            this.history.RequestTick(req);
+            return this.history.RequestTick(req);
         }
 
         internal event EventHandler<ChangingNowEventArgs> ChangingNow;
@@ -196,10 +197,22 @@ namespace TimeExt.VirtualImplementations
         {
             return new RelativeTimelineScope(this.timelines, now);
         }
-        internal long CurrentRemainedTicks
+
+        readonly IDictionary<Tuple<Timer, RelativeTimeline>, long> remainedTicksDict =
+            new Dictionary<Tuple<Timer, RelativeTimeline>, long>();
+
+        internal long GetCurrentRemainedTicks(Timer timer)
         {
-            get { return this.timelines.Peek().RemainedTicks; }
-            set { this.timelines.Peek().RemainedTicks = value; }
+            var timeline = this.timelines.Peek();
+            if (this.remainedTicksDict.ContainsKey(Tuple.Create(timer, timeline)) == false)
+                return 0;
+            return this.remainedTicksDict[Tuple.Create(timer, timeline)];
+        }
+
+        internal void SetCurrentRemainedTicks(Timer timer, long newValue)
+        {
+            var timeline = this.timelines.Peek();
+            this.remainedTicksDict[Tuple.Create(timer, timeline)] = newValue;
         }
 
         public void WaitForTime(TimeSpan span)

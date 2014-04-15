@@ -40,12 +40,9 @@ namespace TimeExt.VirtualImplementations
         {
             if (this.initialTick == InitialTick.Enabled && this.isCalledWaitForTime == false)
             {
-                using (var scope = this.timeline.CreateNewTimeline(TimeSpan.Zero, 1))
-                {
-                    this.isCalledWaitForTime = true;
-                    EventHelper.Raise(this.tickHandler, this, EventArgs.Empty);
-                    e.TicksCount = scope.TicksCount;
-                }
+                this.isCalledWaitForTime = true;
+                if (this.timeline.RequestTick(new TickRequest(this, this.timeline.UtcNow)))
+                    e.TicksCount = 0;
             }
         }
 
@@ -53,29 +50,15 @@ namespace TimeExt.VirtualImplementations
         // この中で必要に応じてTickイベントを発火する。
         private void OnChangedNow(object sender, ChangedNowEventArgs e)
         {
-            var totalTicksCount = (e.Delta.Ticks + this.timeline.CurrentRemainedTicks) / this.interval.Ticks;
-            //this.timeline.CurrentRemainedTicks = (e.Delta.Ticks + this.timeline.CurrentRemainedTicks) % this.interval.Ticks;
+            var oldRemainedTicks = this.timeline.GetCurrentRemainedTicks(this);
+            var totalTicksCount = (e.Delta.Ticks + oldRemainedTicks) / this.interval.Ticks;
+            var remainedTicks = (e.Delta.Ticks + oldRemainedTicks) % this.interval.Ticks;
+            this.timeline.SetCurrentRemainedTicks(this, remainedTicks);
             // 最大totalTicsCount回のTickイベントを発火する。
             for (int i = 0; i < totalTicksCount - e.ChangingNowTicksCount; i++)
             {
-                var now = this.timeline.UtcNow - e.Delta + (TimeSpan.FromTicks(this.interval.Ticks * (i + 1)));
+                var now = this.timeline.UtcNow - e.Delta + (TimeSpan.FromTicks(this.interval.Ticks * (i + 1) - oldRemainedTicks));
                 this.timeline.RequestTick(new TickRequest(this, now));
-            }
-        }
-
-        private void DoChangedNow(ChangedNowEventArgs e)
-        {
-            var totalTicksCount = (e.Delta.Ticks + this.timeline.CurrentRemainedTicks) / this.interval.Ticks;
-            this.timeline.CurrentRemainedTicks = (e.Delta.Ticks + this.timeline.CurrentRemainedTicks) % this.interval.Ticks;
-            // 最大totalTicsCount回のTickイベントを発火する。
-            for (int i = 0; i < totalTicksCount - e.ChangingNowTicksCount; i++)
-            {
-                using (var scope = this.timeline.CreateNewTimeline(interval, i + 1))
-                {
-                    EventHelper.Raise(this.tickHandler, this, EventArgs.Empty);
-                    i += scope.TicksCount;      // 子のタイムラインでTickイベントを発火していたら、その分は発火しないようにする。
-                                                // これをしないと、イベントを重複して発火させてしまう。
-                }
             }
         }
 
