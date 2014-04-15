@@ -109,6 +109,20 @@ namespace TimeExt.Tests.VirtualImplementations
         }
 
         [Test]
+        public void タスクの終了を待ち受けれる()
+        {
+	    var origin = DateTime.Parse("2014/01/01").ToUniversalTime();
+            var tl = new Timeline(origin);
+
+            var task = tl.CreateTask(() => { tl.WaitForTime(TimeSpan.FromSeconds(10)); });
+            tl.WaitForTime(TimeSpan.FromSeconds(1));
+
+            task.Join();
+
+            Assert.That(tl.UtcNow, Is.EqualTo(origin + TimeSpan.FromSeconds(10)));
+        }
+
+        [Test]
         public void TimelineにUTCではないDateTimeを渡すと例外が投げられる()
         {
             Assert.That(() => new Timeline(DateTime.Now), Throws.Exception.TypeOf<ArgumentException>());

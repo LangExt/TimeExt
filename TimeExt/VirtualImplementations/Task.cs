@@ -28,15 +28,25 @@ namespace TimeExt.VirtualImplementations
                 this.rootTimeline.RequestFire(new FireRequest(this, utcNow));
         }
 
+        DateTime newNow;
+
         public void Fire(DateTime now)
         {
             using (var scope = rootTimeline.CreateNewTimeline(now))
+            {
                 action();
+                this.newNow = this.rootTimeline.UtcNow;
+            }
         }
 
         public void Dispose()
         {
             // for the real world.
+        }
+
+        public void Join()
+        {
+            rootTimeline.SetContextIfNeed(this.newNow);
         }
     }
 }

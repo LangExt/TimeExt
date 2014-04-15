@@ -27,7 +27,7 @@ namespace TimeExt
     /// </summary>
     public interface ITask : IDisposable
     {
-
+        void Join();
     }
 
     /// <summary>

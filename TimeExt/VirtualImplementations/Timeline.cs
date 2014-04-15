@@ -26,6 +26,13 @@ namespace TimeExt.VirtualImplementations
         {
             get { return this.Origin + this.passed; }
         }
+
+        internal void SetNewUtcNow(DateTime newNow)
+        {
+            var diff = newNow - this.UtcNow;
+            if(0 < diff.Ticks)
+                this.passed += diff;
+        }
     }
 
     internal sealed class ChangedNowEventArgs : EventArgs
@@ -165,6 +172,13 @@ namespace TimeExt.VirtualImplementations
             EventHelper.Raise(this.ChangedNow, this, new ChangedNowEventArgs(span));
         }
 
+        internal void SetContextIfNeed(DateTime dateTime)
+        {
+            // 現在時刻が進む可能性があるが、既に進められた時刻に追いつこうとしているだけなので、
+            // ここでChangingNowやChangedNowを呼び出す必要はない(呼び出してもいいが、なにも起こらない)
+            timelines.Peek().SetNewUtcNow(dateTime);
+        }
+
         public DateTime UtcNow
         {
             get { return timelines.Peek().UtcNow; }
@@ -201,6 +215,5 @@ namespace TimeExt.VirtualImplementations
         {
             return this.CreateWaiter(timeSpanValues.Select(f).ToArray());
         }
-
     }
 }
