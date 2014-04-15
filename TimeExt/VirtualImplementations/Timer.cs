@@ -5,7 +5,7 @@ using System.Text;
 
 namespace TimeExt.VirtualImplementations
 {
-    internal sealed class Timer : ITimer, IFireable
+    internal sealed class Timer : ITimer, IExecution
     {
         EventHandler tickHandler;
         public event EventHandler Tick
@@ -41,7 +41,7 @@ namespace TimeExt.VirtualImplementations
             if (this.initialTick == InitialTick.Enabled && this.isCalledWaitForTime == false)
             {
                 this.isCalledWaitForTime = true;
-                this.timeline.RequestFire(new FireRequest(this, this.timeline.UtcNow));
+                this.timeline.Schedule(new ScheduledExecution(this, this.timeline.UtcNow));
             }
         }
 
@@ -57,7 +57,7 @@ namespace TimeExt.VirtualImplementations
             for (int i = 0; i < totalTicksCount; i++)
             {
                 var now = this.timeline.UtcNow - e.Delta + (TimeSpan.FromTicks(this.interval.Ticks * (i + 1) - oldRemainedTicks));
-                this.timeline.RequestFire(new FireRequest(this, now));
+                this.timeline.Schedule(new ScheduledExecution(this, now));
             }
         }
 
@@ -66,9 +66,9 @@ namespace TimeExt.VirtualImplementations
             // for the real world.
         }
 
-        public void Fire(DateTime now)
+        public void Execute(DateTime origin)
         {
-            using (var scope = this.timeline.CreateNewTimeline(now))
+            using (var scope = this.timeline.CreateNewExecutionContext(origin))
             {
                 EventHelper.Raise(this.tickHandler, this, EventArgs.Empty);
             }

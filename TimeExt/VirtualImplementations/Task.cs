@@ -5,37 +5,37 @@ using System.Text;
 
 namespace TimeExt.VirtualImplementations
 {
-    internal sealed class Task : ITask, IFireable
+    internal sealed class Task : ITask, IExecution
     {
-        readonly Timeline rootTimeline;
-        readonly RelativeTimeline timeline;
-        readonly DateTime utcNow;
+        readonly Timeline timeline;
+        readonly ExecutionContext currentContext;
+        readonly DateTime origin;
         readonly Action action;
 
-        internal Task(Timeline rootTimeline, RelativeTimeline timeline, DateTime UtcNow, Action action)
+        internal Task(Timeline timeline, ExecutionContext currentContext, DateTime origin, Action action)
         {
-            this.rootTimeline = rootTimeline;
             this.timeline = timeline;
-            this.utcNow = UtcNow;
+            this.currentContext = currentContext;
+            this.origin = origin;
             this.action = action;
 
-            rootTimeline.ChangingNow += OnChangingNow;
+            timeline.ChangingNow += OnChangingNow;
         }
 
         void OnChangingNow(object sender, EventArgs e)
         {
-            if (utcNow <= timeline.UtcNow)
-                this.rootTimeline.RequestFire(new FireRequest(this, utcNow));
+            if (origin <= currentContext.UtcNow)
+                this.timeline.Schedule(new ScheduledExecution(this, origin));
         }
 
-        DateTime newNow;
+        DateTime end;
 
-        public void Fire(DateTime now)
+        public void Execute(DateTime origin)
         {
-            using (var scope = rootTimeline.CreateNewTimeline(now))
+            using (var scope = timeline.CreateNewExecutionContext(origin))
             {
                 action();
-                this.newNow = this.rootTimeline.UtcNow;
+                this.end = this.timeline.UtcNow;
             }
         }
 
@@ -46,7 +46,7 @@ namespace TimeExt.VirtualImplementations
 
         public void Join()
         {
-            rootTimeline.SetContextIfNeed(this.newNow);
+            timeline.SetContextIfNeed(this.end);
         }
     }
 }

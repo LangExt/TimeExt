@@ -5,15 +5,15 @@ using System.Text;
 
 namespace TimeExt.VirtualImplementations
 {
-    internal sealed class RelativeTimeline
+    internal sealed class ExecutionContext
     {
-        internal readonly DateTime Origin;
+        readonly DateTime origin;
 
         TimeSpan passed;
 
-        internal RelativeTimeline(DateTime origin)
+        internal ExecutionContext(DateTime origin)
         {
-            this.Origin = origin;
+            this.origin = origin;
         }
 
         internal void WaitForTime(TimeSpan span)
@@ -24,12 +24,12 @@ namespace TimeExt.VirtualImplementations
         // 基準時刻(Origin)に待った時間の合計を足せば、その時点での現在時刻になる
         internal DateTime UtcNow
         {
-            get { return this.Origin + this.passed; }
+            get { return this.origin + this.passed; }
         }
 
-        internal void SetNewUtcNow(DateTime newNow)
+        internal void SetNewOrigin(DateTime newOrigin)
         {
-            var diff = newNow - this.UtcNow;
+            var diff = newOrigin - this.UtcNow;
             if(0 < diff.Ticks)
                 this.passed += diff;
         }
@@ -45,56 +45,56 @@ namespace TimeExt.VirtualImplementations
         }
     }
 
-    internal sealed class RelativeTimelineScope : IDisposable
+    internal sealed class ExecutionContextScope : IDisposable
     {
-        readonly Stack<RelativeTimeline> timelines;
+        readonly Stack<ExecutionContext> contextStack;
 
-        public RelativeTimelineScope(Stack<RelativeTimeline> timelines, DateTime now)
+        public ExecutionContextScope(Stack<ExecutionContext> contextStack, DateTime origin)
         {
-            this.timelines = timelines;
+            this.contextStack = contextStack;
 
-            var newTimeline = new RelativeTimeline(now);
-            this.timelines.Push(newTimeline);
+            var newContext = new ExecutionContext(origin);
+            this.contextStack.Push(newContext);
         }
 
         public void Dispose()
         {
-            this.timelines.Pop();
+            this.contextStack.Pop();
         }
     }
 
-    internal interface IFireable
+    internal interface IExecution
     {
-        void Fire(DateTime now);
+        void Execute(DateTime origin);
     }
 
     /// <summary>
-    /// Fireのリクエスト情報を保持するクラスです。
-    /// Fireのリクエスト情報には、リクエストを要求したTimerと、
-    /// Fireが発生すべき時刻が含まれます。
+    /// 実行のスケジュール情報を保持するクラスです。
+    /// 実行のスケジュール情報には、スケジュールされた実行と、
+    /// スケジュールされている時刻が含まれます。
     /// </summary>
-    internal sealed class FireRequest
+    internal sealed class ScheduledExecution
     {
-        internal readonly IFireable Fireable;
-        internal readonly DateTime TickTime;
+        internal readonly IExecution Execution;
+        internal readonly DateTime Origin;
 
-        internal FireRequest(IFireable timer, DateTime tickTime)
+        internal ScheduledExecution(IExecution execution, DateTime origin)
         {
-            this.Fireable = timer;
-            this.TickTime = tickTime;
+            this.Execution = execution;
+            this.Origin = origin;
         }
 
         public override bool Equals(object obj)
         {
-            var other = obj as FireRequest;
+            var other = obj as ScheduledExecution;
             if (other == null)
                 return false;
-            return object.ReferenceEquals(this.Fireable, other.Fireable) && this.TickTime == other.TickTime;
+            return object.ReferenceEquals(this.Execution, other.Execution) && this.Origin == other.Origin;
         }
 
         public override int GetHashCode()
         {
-            return Tuple.Create(this.Fireable, this.TickTime).GetHashCode();
+            return Tuple.Create(this.Execution, this.Origin).GetHashCode();
         }
     }
 
@@ -111,19 +111,19 @@ namespace TimeExt.VirtualImplementations
         internal event EventHandler ChangingNow;
         internal event EventHandler<ChangedNowEventArgs> ChangedNow;
 
-        readonly Stack<RelativeTimeline> timelines = new Stack<RelativeTimeline>();
+        readonly Stack<ExecutionContext> contextStack = new Stack<ExecutionContext>();
 
-        // 既にTickされたものを再度Tickしないようにするために、historyとして保持しておく
-        readonly ISet<FireRequest> history = new HashSet<FireRequest>();
+        // 既に実行されたものを再度実行しないようにするために、schedulesとして保持しておく
+        readonly ISet<ScheduledExecution> schedules = new HashSet<ScheduledExecution>();
 
-        internal void RequestFire(FireRequest req)
+        internal void Schedule(ScheduledExecution scheduled)
         {
-            // Fireがリクエストされても、既にhistoryに同じリクエストがある場合はTickしない
-            if (this.history.Contains(req))
+            // Scheduleがリクエストされても、既にschedulesに同じスケジュールがある場合は実行しない
+            if (this.schedules.Contains(scheduled))
                 return;
 
-            this.history.Add(req);
-            req.Fireable.Fire(req.TickTime);
+            this.schedules.Add(scheduled);
+            scheduled.Execution.Execute(scheduled.Origin);
         }
 
         /// <summary>
@@ -137,20 +137,20 @@ namespace TimeExt.VirtualImplementations
         {
             if (origin.Kind != DateTimeKind.Utc)
                 throw new ArgumentException("基準となる時刻にはUTCを指定する必要があります。", "origin");
-            timelines.Push(new RelativeTimeline(origin));
+            contextStack.Push(new ExecutionContext(origin));
         }
 
-        internal RelativeTimelineScope CreateNewTimeline(DateTime now)
+        internal ExecutionContextScope CreateNewExecutionContext(DateTime origin)
         {
-            return new RelativeTimelineScope(this.timelines, now);
+            return new ExecutionContextScope(this.contextStack, origin);
         }
 
-        readonly IDictionary<Tuple<Timer, RelativeTimeline>, long> remainedTicksDict =
-            new Dictionary<Tuple<Timer, RelativeTimeline>, long>();
+        readonly IDictionary<Tuple<Timer, ExecutionContext>, long> remainedTicksDict =
+            new Dictionary<Tuple<Timer, ExecutionContext>, long>();
 
         internal long GetCurrentRemainedTicks(Timer timer)
         {
-            var timeline = this.timelines.Peek();
+            var timeline = this.contextStack.Peek();
             if (this.remainedTicksDict.ContainsKey(Tuple.Create(timer, timeline)) == false)
                 return 0;
             return this.remainedTicksDict[Tuple.Create(timer, timeline)];
@@ -158,7 +158,7 @@ namespace TimeExt.VirtualImplementations
 
         internal void SetCurrentRemainedTicks(Timer timer, long newValue)
         {
-            var timeline = this.timelines.Peek();
+            var timeline = this.contextStack.Peek();
             this.remainedTicksDict[Tuple.Create(timer, timeline)] = newValue;
         }
 
@@ -168,25 +168,25 @@ namespace TimeExt.VirtualImplementations
             // 現在時刻を指定時間分進めます。
             // その過程で、タイマーと連動(ChangedNowにタイマーのOnChangedNowが登録される)して、
             // 指定周期が満たされた分だけタイマーのTickイベントを発火します。
-            timelines.Peek().WaitForTime(span);
+            contextStack.Peek().WaitForTime(span);
             EventHelper.Raise(this.ChangedNow, this, new ChangedNowEventArgs(span));
         }
 
-        internal void SetContextIfNeed(DateTime dateTime)
+        internal void SetContextIfNeed(DateTime origin)
         {
             // 現在時刻が進む可能性があるが、既に進められた時刻に追いつこうとしているだけなので、
             // ここでChangingNowやChangedNowを呼び出す必要はない(呼び出してもいいが、なにも起こらない)
-            timelines.Peek().SetNewUtcNow(dateTime);
+            contextStack.Peek().SetNewOrigin(origin);
         }
 
         public DateTime UtcNow
         {
-            get { return timelines.Peek().UtcNow; }
+            get { return contextStack.Peek().UtcNow; }
         }
 
         public ITask CreateTask(Action action)
         {
-            return new Task(this, this.timelines.Peek(), UtcNow, action);
+            return new Task(this, this.contextStack.Peek(), UtcNow, action);
         }
 
         public ITimer CreateTimer(TimeSpan interval, InitialTick initialTick = InitialTick.Disabled)
@@ -196,8 +196,8 @@ namespace TimeExt.VirtualImplementations
 
         public IStopwatch CreateStopwatch()
         {
-            var start = UtcNow;
-            return new Stopwatch(() => UtcNow - start);
+            var origin = UtcNow;
+            return new Stopwatch(() => UtcNow - origin);
         }
 
         public Action CreateWaiter(params TimeSpan[] timeSpans)
