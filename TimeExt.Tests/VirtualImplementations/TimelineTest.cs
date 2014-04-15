@@ -48,7 +48,7 @@ namespace TimeExt.Tests.VirtualImplementations
 
         public class タイマー起動時にTickしないタイマーのテスト
         {
-            readonly DateTime origin = DateTime.UtcNow;
+            readonly DateTime origin = DateTime.Parse("2014/01/01").ToUniversalTime();
 
             [Test]
             public void 指定した間隔分の時間を進めた時に初回のTickイベントが発火される()
@@ -188,7 +188,7 @@ namespace TimeExt.Tests.VirtualImplementations
 
         public class タイマー起動時にTickするタイマーのテスト
         {
-            readonly DateTime origin = DateTime.UtcNow;
+            readonly DateTime origin = DateTime.Parse("2014/01/01").ToUniversalTime();
 
             [Test]
             public void 指定した間隔分の時間を進めなくても初回のTickイベントが発火される()
