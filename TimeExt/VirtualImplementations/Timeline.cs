@@ -76,6 +76,16 @@ namespace TimeExt.VirtualImplementations
             this.timelines.Push(newTimeline);
         }
 
+        public RelativeTimelineScope(Stack<RelativeTimeline> timelines, DateTime now)
+        {
+            this.timelines = timelines;
+
+            // このクラスはTickを呼ぶたびにインスタンス化されるので、Tickの回数をインクリメントする必要がある。
+            timelines.Peek().IncrementTicksCount();
+            var newTimeline = new RelativeTimeline(now);
+            this.timelines.Push(newTimeline);
+        }
+
         public void Dispose()
         {
             this.timelines.Pop();
@@ -84,6 +94,51 @@ namespace TimeExt.VirtualImplementations
         internal int TicksCount
         {
             get { return this.timelines.Peek().TicksCount; }
+        }
+    }
+
+    internal sealed class TickRequest
+    {
+        internal readonly Timer Timer;
+        internal readonly DateTime TickTime;
+
+        internal TickRequest(Timer timer, DateTime tickTime)
+        {
+            this.Timer = timer;
+            this.TickTime = tickTime;
+        }
+
+        public override bool Equals(object obj)
+        {
+            var other = obj as TickRequest;
+            if (other == null)
+                return false;
+            return object.ReferenceEquals(this.Timer, other.Timer) && this.TickTime == other.TickTime;
+        }
+
+        public override int GetHashCode()
+        {
+            return Tuple.Create(this.Timer, this.TickTime).GetHashCode();
+        }
+    }
+
+    internal sealed class TickRequestHistory
+    {
+        readonly ISet<TickRequest> history = new HashSet<TickRequest>();
+        readonly Action<TickRequest> request;
+
+        internal TickRequestHistory(Action<TickRequest> request)
+        {
+            this.request = request;
+        }
+
+        internal void RequestTick(TickRequest req)
+        {
+            if (this.history.Contains(req) == false)
+            {
+                this.history.Add(req);
+                this.request(req);
+            }
         }
     }
 
@@ -97,6 +152,19 @@ namespace TimeExt.VirtualImplementations
     /// </summary>
     public sealed class Timeline : ITimeline
     {
+        readonly TickRequestHistory history;
+
+        void InvokeTick(TickRequest req)
+        {
+            // req.TickTimeを渡す必要はないかもしれない
+            req.Timer.FireTick(req.TickTime);
+        }
+
+        internal void RequestTick(TickRequest req)
+        {
+            this.history.RequestTick(req);
+        }
+
         internal event EventHandler<ChangingNowEventArgs> ChangingNow;
         internal event EventHandler<ChangedNowEventArgs> ChangedNow;
 
@@ -114,6 +182,9 @@ namespace TimeExt.VirtualImplementations
             if (origin.Kind != DateTimeKind.Utc)
                 throw new ArgumentException("基準となる時刻にはUTCを指定する必要があります。", "origin");
             timelines.Push(new RelativeTimeline(origin));
+
+
+            this.history = new TickRequestHistory(this.InvokeTick);
         }
 
         internal RelativeTimelineScope CreateNewTimeline(TimeSpan interval, int tickTimes)
@@ -121,6 +192,10 @@ namespace TimeExt.VirtualImplementations
             return new RelativeTimelineScope(this.timelines, interval, tickTimes);
         }
 
+        internal RelativeTimelineScope CreateNewTimeline(DateTime now)
+        {
+            return new RelativeTimelineScope(this.timelines, now);
+        }
         internal long CurrentRemainedTicks
         {
             get { return this.timelines.Peek().RemainedTicks; }
@@ -169,5 +244,6 @@ namespace TimeExt.VirtualImplementations
         {
             return this.CreateWaiter(timeSpanValues.Select(f).ToArray());
         }
+
     }
 }

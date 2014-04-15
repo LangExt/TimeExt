@@ -54,6 +54,18 @@ namespace TimeExt.VirtualImplementations
         private void OnChangedNow(object sender, ChangedNowEventArgs e)
         {
             var totalTicksCount = (e.Delta.Ticks + this.timeline.CurrentRemainedTicks) / this.interval.Ticks;
+            //this.timeline.CurrentRemainedTicks = (e.Delta.Ticks + this.timeline.CurrentRemainedTicks) % this.interval.Ticks;
+            // 最大totalTicsCount回のTickイベントを発火する。
+            for (int i = 0; i < totalTicksCount - e.ChangingNowTicksCount; i++)
+            {
+                var now = this.timeline.UtcNow - e.Delta + (TimeSpan.FromTicks(this.interval.Ticks * (i + 1)));
+                this.timeline.RequestTick(new TickRequest(this, now));
+            }
+        }
+
+        private void DoChangedNow(ChangedNowEventArgs e)
+        {
+            var totalTicksCount = (e.Delta.Ticks + this.timeline.CurrentRemainedTicks) / this.interval.Ticks;
             this.timeline.CurrentRemainedTicks = (e.Delta.Ticks + this.timeline.CurrentRemainedTicks) % this.interval.Ticks;
             // 最大totalTicsCount回のTickイベントを発火する。
             for (int i = 0; i < totalTicksCount - e.ChangingNowTicksCount; i++)
@@ -70,6 +82,14 @@ namespace TimeExt.VirtualImplementations
         public void Dispose()
         {
             // for the real world.
+        }
+
+        internal void FireTick(DateTime now)
+        {
+            using (var scope = this.timeline.CreateNewTimeline(now))
+            {
+                EventHelper.Raise(this.tickHandler, this, EventArgs.Empty);
+            }
         }
     }
 }

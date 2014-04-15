@@ -12,6 +12,27 @@ namespace TimeExt.Tests.VirtualImplementations
     public class TimelineTest
     {
         [Test]
+        public void 複数のタイマーが扱える()
+        {
+            var tl = new Timeline(DateTime.Parse("2014/01/01").ToUniversalTime());
+
+            var timerA = tl.CreateTimer(TimeSpan.FromSeconds(5));
+            var waitA = tl.CreateWaiter(TimeSpan.FromSeconds, 2, 2, 2, 2, 2);
+            var countA = 0;
+            timerA.Tick += (sender, arg) => { countA++; waitA(); };
+
+            var timerB = tl.CreateTimer(TimeSpan.FromSeconds(8));
+            var waitB = tl.CreateWaiter(TimeSpan.FromSeconds, 3, 3, 3);
+            var countB = 0;
+            timerB.Tick += (sender, arg) => { countB++; waitB(); };
+
+            tl.WaitForTime(TimeSpan.FromSeconds(29));
+
+            Assert.That(countA, Is.EqualTo(5));
+            Assert.That(countB, Is.EqualTo(3));
+        }
+
+        [Test]
         public void TimelineにUTCではないDateTimeを渡すと例外が投げられる()
         {
             Assert.That(() => new Timeline(DateTime.Now), Throws.Exception.TypeOf<ArgumentException>());
