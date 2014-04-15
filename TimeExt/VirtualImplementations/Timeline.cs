@@ -56,6 +56,11 @@ namespace TimeExt.VirtualImplementations
         }
     }
 
+    /// <summary>
+    /// Tickのリクエスト情報を保持するクラスです。
+    /// Tickのリクエスト情報には、リクエストを要求したTimerと、
+    /// Tickが発生すべき時刻が含まれます。
+    /// </summary>
     internal sealed class TickRequest
     {
         internal readonly Timer Timer;
@@ -81,26 +86,6 @@ namespace TimeExt.VirtualImplementations
         }
     }
 
-    internal sealed class TickRequestHistory
-    {
-        readonly ISet<TickRequest> history = new HashSet<TickRequest>();
-        readonly Action<TickRequest> request;
-
-        internal TickRequestHistory(Action<TickRequest> request)
-        {
-            this.request = request;
-        }
-
-        internal void RequestTick(TickRequest req)
-        {
-            if (this.history.Contains(req))
-                return;
-
-            this.history.Add(req);
-            this.request(req);
-        }
-    }
-
     /// <summary>
     /// 時間に依存するロジックをテストするために使用するクラスです。
     /// このクラスは、タイマーによる非同期コードを直列化することで、
@@ -111,23 +96,23 @@ namespace TimeExt.VirtualImplementations
     /// </summary>
     public sealed class Timeline : ITimeline
     {
-        readonly TickRequestHistory history;
-
-        void InvokeTick(TickRequest req)
-        {
-            // req.TickTimeを渡す必要はないかもしれない
-            req.Timer.FireTick(req.TickTime);
-        }
-
-        internal void RequestTick(TickRequest req)
-        {
-            this.history.RequestTick(req);
-        }
-
         internal event EventHandler ChangingNow;
         internal event EventHandler<ChangedNowEventArgs> ChangedNow;
 
         readonly Stack<RelativeTimeline> timelines = new Stack<RelativeTimeline>();
+
+        // 既にTickされたものを再度Tickしないようにするために、historyとして保持しておく
+        readonly ISet<TickRequest> history = new HashSet<TickRequest>();
+
+        internal void RequestTick(TickRequest req)
+        {
+            // Tickがリクエストされても、既にhistoryに同じリクエストがある場合はTickしない
+            if (this.history.Contains(req))
+                return;
+
+            this.history.Add(req);
+            req.Timer.FireTick(req.TickTime);
+        }
 
         /// <summary>
         /// 基準時刻を指定してインスタンスを生成します。
@@ -141,9 +126,6 @@ namespace TimeExt.VirtualImplementations
             if (origin.Kind != DateTimeKind.Utc)
                 throw new ArgumentException("基準となる時刻にはUTCを指定する必要があります。", "origin");
             timelines.Push(new RelativeTimeline(origin));
-
-
-            this.history = new TickRequestHistory(this.InvokeTick);
         }
 
         internal RelativeTimelineScope CreateNewTimeline(DateTime now)
