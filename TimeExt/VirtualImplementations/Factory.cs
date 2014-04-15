@@ -5,9 +5,16 @@ using System.Text;
 
 namespace TimeExt.VirtualImplementations
 {
-    public sealed class Factory
+    public sealed class Factory : IFactory
     {
-        public ITimeline CreateTimeline(DateTime origin)
+        readonly DateTime origin;
+
+        public Factory(DateTime origin)
+        {
+            this.origin = origin;
+        }
+
+        public ITimeline CreateTimeline()
         {
             return new Timeline(origin);
         }

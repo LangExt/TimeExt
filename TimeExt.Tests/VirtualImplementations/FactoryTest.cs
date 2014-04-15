@@ -15,13 +15,13 @@ namespace TimeExt.Tests.VirtualImplementations
         [SetUp]
         public void SetUp()
         {
-            this.factory = new Factory();
+            this.factory = new Factory(DateTime.UtcNow);
         }
 
         [Test]
         public void Timelineが生成できる()
         {
-            Assert.That(factory.CreateTimeline(DateTime.UtcNow), Is.TypeOf<Timeline>());
+            Assert.That(factory.CreateTimeline(), Is.TypeOf<Timeline>());
         }
 
         [Test]

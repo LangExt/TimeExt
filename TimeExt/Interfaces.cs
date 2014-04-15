@@ -7,6 +7,22 @@ using System.Threading.Tasks;
 namespace TimeExt
 {
     /// <summary>
+    /// TimeExtが提供する一連のインターフェイスのインスタンスを作成するためのメソッド群を提供します。
+    /// </summary>
+    public interface IFactory
+    {
+        /// <summary>
+        /// ITimeline インターフェイスを実装しているクラスの新しいインスタンスを返します。
+        /// </summary>
+        ITimeline CreateTimeline();
+
+        /// <summary>
+        /// ITaskJoin インターフェイスを実装しているクラスの新しいインスタンスを返します。
+        /// </summary>
+        ITaskJoin CreateTaskJoin();
+    }
+    
+    /// <summary>
     /// ストップウォッチを表すインターフェイスです。
     /// このストップウォッチは明示的な開始操作はないので、
     /// インスタンスを生成すると自動的に開始される点に注意してください。
