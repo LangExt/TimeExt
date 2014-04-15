@@ -56,33 +56,38 @@ namespace TimeExt.VirtualImplementations
         }
     }
 
-    /// <summary>
-    /// Tickのリクエスト情報を保持するクラスです。
-    /// Tickのリクエスト情報には、リクエストを要求したTimerと、
-    /// Tickが発生すべき時刻が含まれます。
-    /// </summary>
-    internal sealed class TickRequest
+    internal interface IFireable
     {
-        internal readonly Timer Timer;
+        void Fire(DateTime now);
+    }
+
+    /// <summary>
+    /// Fireのリクエスト情報を保持するクラスです。
+    /// Fireのリクエスト情報には、リクエストを要求したTimerと、
+    /// Fireが発生すべき時刻が含まれます。
+    /// </summary>
+    internal sealed class FireRequest
+    {
+        internal readonly IFireable Fireable;
         internal readonly DateTime TickTime;
 
-        internal TickRequest(Timer timer, DateTime tickTime)
+        internal FireRequest(IFireable timer, DateTime tickTime)
         {
-            this.Timer = timer;
+            this.Fireable = timer;
             this.TickTime = tickTime;
         }
 
         public override bool Equals(object obj)
         {
-            var other = obj as TickRequest;
+            var other = obj as FireRequest;
             if (other == null)
                 return false;
-            return object.ReferenceEquals(this.Timer, other.Timer) && this.TickTime == other.TickTime;
+            return object.ReferenceEquals(this.Fireable, other.Fireable) && this.TickTime == other.TickTime;
         }
 
         public override int GetHashCode()
         {
-            return Tuple.Create(this.Timer, this.TickTime).GetHashCode();
+            return Tuple.Create(this.Fireable, this.TickTime).GetHashCode();
         }
     }
 
@@ -102,16 +107,16 @@ namespace TimeExt.VirtualImplementations
         readonly Stack<RelativeTimeline> timelines = new Stack<RelativeTimeline>();
 
         // 既にTickされたものを再度Tickしないようにするために、historyとして保持しておく
-        readonly ISet<TickRequest> history = new HashSet<TickRequest>();
+        readonly ISet<FireRequest> history = new HashSet<FireRequest>();
 
-        internal void RequestTick(TickRequest req)
+        internal void RequestFire(FireRequest req)
         {
-            // Tickがリクエストされても、既にhistoryに同じリクエストがある場合はTickしない
+            // Fireがリクエストされても、既にhistoryに同じリクエストがある場合はTickしない
             if (this.history.Contains(req))
                 return;
 
             this.history.Add(req);
-            req.Timer.FireTick(req.TickTime);
+            req.Fireable.Fire(req.TickTime);
         }
 
         /// <summary>
@@ -167,7 +172,7 @@ namespace TimeExt.VirtualImplementations
 
         public ITask CreateTask(Action action)
         {
-            throw new NotImplementedException();
+            return new Task(this, this.timelines.Peek(), UtcNow, action);
         }
 
         public ITimer CreateTimer(TimeSpan interval, InitialTick initialTick = InitialTick.Disabled)

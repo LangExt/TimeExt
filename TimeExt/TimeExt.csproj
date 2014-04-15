@@ -49,6 +49,7 @@
     <Compile Include="RealImplementations\Timeline.cs" />
     <Compile Include="RealImplementations\Timer.cs" />
     <Compile Include="VirtualImplementations\Stopwatch.cs" />
+    <Compile Include="VirtualImplementations\Task.cs" />
     <Compile Include="VirtualImplementations\Timeline.cs" />
     <Compile Include="VirtualImplementations\Timer.cs" />
   </ItemGroup>

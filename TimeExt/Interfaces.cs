@@ -19,6 +19,12 @@ namespace TimeExt
         TimeSpan Elapsed { get; }
     }
 
+    /// <summary>
+    /// タスクを表すインターフェイスです。
+    /// このタスクには明示的な開始操作はなく、
+    /// インスタンスを生成したと同時に自動的に開始される点に注意してください。
+    /// タスクを明示的に終了したい場合は、Disposeメソッドを呼び出してください。
+    /// </summary>
     public interface ITask : IDisposable
     {
 

@@ -41,7 +41,7 @@ namespace TimeExt.Tests.VirtualImplementations
             var tl = new Timeline(origin);
 
             var count = 0;
-            var task = tl.CreateTask(() => { count++;});
+            var task = tl.CreateTask(() => { count++; });
 
             tl.WaitForTime(TimeSpan.FromSeconds(3));
 
