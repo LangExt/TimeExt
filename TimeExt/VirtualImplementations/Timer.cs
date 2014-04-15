@@ -5,7 +5,7 @@ using System.Text;
 
 namespace TimeExt.VirtualImplementations
 {
-    internal sealed class Timer : ITimer, IExecution
+    internal sealed class Timer : ITimer
     {
         EventHandler tickHandler;
         public event EventHandler Tick
@@ -62,11 +62,6 @@ namespace TimeExt.VirtualImplementations
         public void Dispose()
         {
             // for the real world.
-        }
-
-        public void Execute()
-        {
-            EventHelper.Raise(this.tickHandler, this, EventArgs.Empty);
         }
     }
 }
