@@ -133,7 +133,7 @@ namespace TimeExt.VirtualImplementations
         /// UTCに変換したうえで使用してください。
         /// </summary>
         /// <param name="origin">基準時刻</param>
-        public Timeline(DateTime origin)
+        internal Timeline(DateTime origin)
         {
             if (origin.Kind != DateTimeKind.Utc)
                 throw new ArgumentException("基準となる時刻にはUTCを指定する必要があります。", "origin");
