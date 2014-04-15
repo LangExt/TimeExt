@@ -9,10 +9,7 @@ namespace TimeExt.VirtualImplementations
     {
         internal readonly DateTime Origin;
 
-        int ticksCount;
         TimeSpan passed;
-
-        internal long RemainedTicks { get; set; }
 
         internal RelativeTimeline(DateTime origin)
         {
@@ -29,16 +26,6 @@ namespace TimeExt.VirtualImplementations
         {
             get { return this.Origin + this.passed; }
         }
-
-        /// <summary>
-        /// 発火させるべきTickイベントの回数を1増加させます。
-        /// </summary>
-        internal void IncrementTicksCount()
-        {
-            this.ticksCount++;
-        }
-
-        internal int TicksCount { get { return this.ticksCount; } }
     }
 
     internal sealed class ChangedNowEventArgs : EventArgs
@@ -55,22 +42,10 @@ namespace TimeExt.VirtualImplementations
     {
         readonly Stack<RelativeTimeline> timelines;
 
-        internal RelativeTimelineScope(Stack<RelativeTimeline> timelines, TimeSpan interval, int tickTimes)
-        {
-            this.timelines = timelines;
-
-            // このクラスはTickを呼ぶたびにインスタンス化されるので、Tickの回数をインクリメントする必要がある。
-            timelines.Peek().IncrementTicksCount();
-            var newTimeline = new RelativeTimeline(timelines.Peek().Origin + (TimeSpan.FromTicks(interval.Ticks * tickTimes)));
-            this.timelines.Push(newTimeline);
-        }
-
         public RelativeTimelineScope(Stack<RelativeTimeline> timelines, DateTime now)
         {
             this.timelines = timelines;
 
-            // このクラスはTickを呼ぶたびにインスタンス化されるので、Tickの回数をインクリメントする必要がある。
-            timelines.Peek().IncrementTicksCount();
             var newTimeline = new RelativeTimeline(now);
             this.timelines.Push(newTimeline);
         }
@@ -78,11 +53,6 @@ namespace TimeExt.VirtualImplementations
         public void Dispose()
         {
             this.timelines.Pop();
-        }
-
-        internal int TicksCount
-        {
-            get { return this.timelines.Peek().TicksCount; }
         }
     }
 
@@ -174,11 +144,6 @@ namespace TimeExt.VirtualImplementations
 
 
             this.history = new TickRequestHistory(this.InvokeTick);
-        }
-
-        internal RelativeTimelineScope CreateNewTimeline(TimeSpan interval, int tickTimes)
-        {
-            return new RelativeTimelineScope(this.timelines, interval, tickTimes);
         }
 
         internal RelativeTimelineScope CreateNewTimeline(DateTime now)
