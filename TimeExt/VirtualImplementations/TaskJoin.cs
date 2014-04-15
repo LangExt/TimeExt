@@ -9,7 +9,8 @@ namespace TimeExt.VirtualImplementations
     {
         public void JoinAll(IEnumerable<ITask> tasks)
         {
-            throw new NotImplementedException();
+            foreach (var task in tasks)
+                task.Join();
         }
     }
 }

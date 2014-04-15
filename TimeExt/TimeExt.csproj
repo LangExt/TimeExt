@@ -48,7 +48,6 @@
     <Compile Include="RealImplementations\Stopwatch.cs" />
     <Compile Include="RealImplementations\Timeline.cs" />
     <Compile Include="RealImplementations\Timer.cs" />
-    <Compile Include="Tasks.cs" />
     <Compile Include="VirtualImplementations\Factory.cs" />
     <Compile Include="VirtualImplementations\Stopwatch.cs" />
     <Compile Include="VirtualImplementations\Task.cs" />

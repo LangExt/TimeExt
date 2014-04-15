@@ -135,7 +135,7 @@ namespace TimeExt.Tests.VirtualImplementations
             var taskC = tl.CreateTask(() => { tl.WaitForTime(TimeSpan.FromSeconds(5)); });
             tl.WaitForTime(TimeSpan.FromSeconds(1));
 
-            Tasks.JoinAll(taskA, taskB, taskC);
+            factory.CreateTaskJoin().JoinAll(new []{ taskA, taskB, taskC });
 
             Assert.That(tl.UtcNow, Is.EqualTo(origin + TimeSpan.FromSeconds(20)));
         }
