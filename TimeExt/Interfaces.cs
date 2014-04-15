@@ -19,6 +19,11 @@ namespace TimeExt
         TimeSpan Elapsed { get; }
     }
 
+    public interface ITask : IDisposable
+    {
+
+    }
+
     /// <summary>
     /// 一定周期で処理を実行することのできるタイマーを表すインターフェイスです。
     /// </summary>

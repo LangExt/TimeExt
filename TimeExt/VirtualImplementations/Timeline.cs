@@ -165,6 +165,11 @@ namespace TimeExt.VirtualImplementations
             get { return timelines.Peek().UtcNow; }
         }
 
+        public ITask CreateTask(Action action)
+        {
+            throw new NotImplementedException();
+        }
+
         public ITimer CreateTimer(TimeSpan interval, InitialTick initialTick = InitialTick.Disabled)
         {
             return new Timer(this, interval, initialTick);
