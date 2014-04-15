@@ -3,7 +3,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
 using TimeExt.VirtualImplementations;
 
 namespace TimeExt.Tests.VirtualImplementations
@@ -120,6 +119,22 @@ namespace TimeExt.Tests.VirtualImplementations
             task.Join();
 
             Assert.That(tl.UtcNow, Is.EqualTo(origin + TimeSpan.FromSeconds(10)));
+        }
+
+        [Test]
+        public void 複数のタスクの終了を待ち受けれる()
+        {
+	    var origin = DateTime.Parse("2014/01/01").ToUniversalTime();
+            var tl = new Timeline(origin);
+
+            var taskA = tl.CreateTask(() => { tl.WaitForTime(TimeSpan.FromSeconds(10)); });
+            var taskB = tl.CreateTask(() => { tl.WaitForTime(TimeSpan.FromSeconds(20)); });
+            var taskC = tl.CreateTask(() => { tl.WaitForTime(TimeSpan.FromSeconds(5)); });
+            tl.WaitForTime(TimeSpan.FromSeconds(1));
+
+            Tasks.JoinAll(taskA, taskB, taskC);
+
+            Assert.That(tl.UtcNow, Is.EqualTo(origin + TimeSpan.FromSeconds(20)));
         }
 
         [Test]
