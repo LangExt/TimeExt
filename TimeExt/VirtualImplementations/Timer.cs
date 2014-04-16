@@ -43,7 +43,7 @@ namespace TimeExt.VirtualImplementations
             if (this.initialTick == InitialTick.Enabled && this.isCalledWaitForTime == false)
             {
                 this.isCalledWaitForTime = true;
-                timeline.Schedule(new ScheduledExecution(tickerTask, timeline.UtcNow));
+                timeline.Schedule(new ScheduledTask(tickerTask, timeline.UtcNow));
             }
 
             var oldRemainedTicks = this.timeline.GetCurrentRemainedTicks(this);
@@ -55,7 +55,7 @@ namespace TimeExt.VirtualImplementations
             for (int i = 0; i < totalTicksCount; i++)
             {
                 var now = this.timeline.UtcNow + (TimeSpan.FromTicks(this.interval.Ticks * (i + 1 /* InitialTickd期間分 */)));
-                timeline.Schedule(new ScheduledExecution(tickerTask, now));
+                timeline.Schedule(new ScheduledTask(tickerTask, now));
             }
         }
 

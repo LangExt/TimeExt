@@ -63,38 +63,33 @@ namespace TimeExt.VirtualImplementations
         }
     }
 
-    internal interface IExecution
-    {
-        void Execute();
-    }
-
     /// <summary>
-    /// 実行のスケジュール情報を保持するクラスです。
-    /// 実行のスケジュール情報には、スケジュールされた実行と、
+    /// スケジュールされたタスクの情報を保持するクラスです。
+    /// スケジュールされたタスクの情報には、スケジュールされたタスクそのものと、
     /// スケジュールされている時刻が含まれます。
     /// </summary>
-    internal sealed class ScheduledExecution
+    internal sealed class ScheduledTask
     {
-        internal readonly IExecution Execution;
+        internal readonly Task Task;
         internal readonly DateTime Origin;
 
-        internal ScheduledExecution(IExecution execution, DateTime origin)
+        internal ScheduledTask(Task task, DateTime origin)
         {
-            this.Execution = execution;
+            this.Task = task;
             this.Origin = origin;
         }
 
         public override bool Equals(object obj)
         {
-            var other = obj as ScheduledExecution;
+            var other = obj as ScheduledTask;
             if (other == null)
                 return false;
-            return object.ReferenceEquals(this.Execution, other.Execution) && this.Origin == other.Origin;
+            return object.ReferenceEquals(this.Task, other.Task) && this.Origin == other.Origin;
         }
 
         public override int GetHashCode()
         {
-            return Tuple.Create(this.Execution, this.Origin).GetHashCode();
+            return Tuple.Create(this.Task, this.Origin).GetHashCode();
         }
     }
 
@@ -112,18 +107,18 @@ namespace TimeExt.VirtualImplementations
 
         readonly Stack<ExecutionContext> contextStack = new Stack<ExecutionContext>();
 
-        // 既に実行されたものを再度実行しないようにするために、schedulesとして保持しておく
-        readonly ISet<ScheduledExecution> schedules = new HashSet<ScheduledExecution>();
+        // 既に実行されたものを再度実行しないようにするために、scheduledTasksとして保持しておく
+        readonly ISet<ScheduledTask> scheduledTasks = new HashSet<ScheduledTask>();
 
-        internal void Schedule(ScheduledExecution scheduled)
+        internal void Schedule(ScheduledTask scheduled)
         {
-            // Scheduleがリクエストされても、既にschedulesに同じスケジュールがある場合は実行しない
-            if (this.schedules.Contains(scheduled))
+            // Scheduleがリクエストされても、既にscheduledTasksに同じスケジュールがある場合は実行しない
+            if (this.scheduledTasks.Contains(scheduled))
                 return;
 
-            this.schedules.Add(scheduled);
+            this.scheduledTasks.Add(scheduled);
             using (var scope = CreateNewExecutionContext(scheduled.Origin))
-                scheduled.Execution.Execute();
+                scheduled.Task.Execute();
         }
 
         /// <summary>

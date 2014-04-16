@@ -5,7 +5,7 @@ using System.Text;
 
 namespace TimeExt.VirtualImplementations
 {
-    internal sealed class Task : ITask, IExecution
+    internal sealed class Task : ITask 
     {
         readonly Timeline timeline;
         readonly ExecutionContext currentContext;
@@ -26,12 +26,12 @@ namespace TimeExt.VirtualImplementations
         void OnChangingNow(object sender, EventArgs e)
         {
             if (currentContext.UtcNow <= origin)
-                this.timeline.Schedule(new ScheduledExecution(this, origin));
+                this.timeline.Schedule(new ScheduledTask(this, origin));
         }
 
         DateTime end;
 
-        public void Execute()
+        internal void Execute()
         {
             action();
             this.end = this.timeline.UtcNow;
