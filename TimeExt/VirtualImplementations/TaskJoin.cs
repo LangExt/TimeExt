@@ -5,7 +5,7 @@ using System.Text;
 
 namespace TimeExt.VirtualImplementations
 {
-    public sealed class TaskJoin : ITaskJoin
+    internal sealed class TaskJoin : ITaskJoin
     {
         public void JoinAll(IEnumerable<ITask> tasks)
         {

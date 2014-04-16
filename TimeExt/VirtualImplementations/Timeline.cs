@@ -106,7 +106,7 @@ namespace TimeExt.VirtualImplementations
     /// アプリケーションで使用するITimelineをそのインスタンスに変更することで、
     /// 時間に依存するロジックをテスト可能にします。
     /// </summary>
-    public sealed class Timeline : ITimeline
+    internal sealed class Timeline : ITimeline
     {
         internal event EventHandler<ChangingNowEventArgs> ChangingNow;
 
@@ -209,6 +209,7 @@ namespace TimeExt.VirtualImplementations
             return new Stopwatch(() => UtcNow - origin);
         }
 
+        // Waiterの生成はこのクラスから分離すべきかも
         public Action CreateWaiter(params TimeSpan[] timeSpans)
         {
             int i = 0;
@@ -220,6 +221,7 @@ namespace TimeExt.VirtualImplementations
             };
         }
 
+        // Waiterの生成はこのクラスから分離すべきかも
         public Action CreateWaiter(Func<double, TimeSpan> f, params double[] timeSpanValues)
         {
             return this.CreateWaiter(timeSpanValues.Select(f).ToArray());
