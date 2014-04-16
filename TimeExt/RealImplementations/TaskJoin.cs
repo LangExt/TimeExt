@@ -6,7 +6,7 @@ using DotNetTasks = System.Threading.Tasks;
 
 namespace TimeExt.RealImplementations
 {
-    public sealed class TaskJoin : ITaskJoin
+    internal sealed class TaskJoin : ITaskJoin
     {
         internal TaskJoin() { }
 

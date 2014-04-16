@@ -6,7 +6,7 @@ using DotNetTasks = System.Threading.Tasks;
 
 namespace TimeExt.RealImplementations
 {
-    public sealed class Task : ITask
+    internal sealed class Task : ITask
     {
         internal readonly DotNetTasks.Task InternalTask;
 
