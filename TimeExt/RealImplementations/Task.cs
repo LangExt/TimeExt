@@ -24,5 +24,11 @@ namespace TimeExt.RealImplementations
         {
             this.InternalTask.Dispose();
         }
+
+
+        public void Abort()
+        {
+            throw new NotImplementedException();
+        }
     }
 }

@@ -104,7 +104,7 @@ namespace TimeExt.Tests.VirtualImplementations
             tl.WaitForTime(TimeSpan.FromSeconds(1));
 
             Assert.That(countA, Is.EqualTo(3));
-            Assert.That(countB, Is.EqualTo(1)); 
+            Assert.That(countB, Is.EqualTo(1));
             Assert.That(tl.UtcNow, Is.EqualTo(origin + TimeSpan.FromSeconds(1)));
         }
 
@@ -186,6 +186,21 @@ namespace TimeExt.Tests.VirtualImplementations
 
             tl.WaitForTime(TimeSpan.FromSeconds(5));
             Assert.That(sw.Elapsed, Is.EqualTo(TimeSpan.FromSeconds(5)));
+        }
+
+        [Test]
+        public void タスクをアボートするとそれ以降の待ち処理は実行されない()
+        {
+            var tl = new Timeline(origin);
+            var task = default(ITask);
+            task = tl.CreateTask(() => { 
+                task.Abort();
+                tl.WaitForTime(TimeSpan.FromSeconds(100));
+            });
+
+            task.Join();
+
+            Assert.That(tl.UtcNow, Is.EqualTo(origin + TimeSpan.FromSeconds(0)));
         }
 
         public class タイマー起動時にTickしないタイマーのテスト

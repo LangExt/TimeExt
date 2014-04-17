@@ -46,5 +46,11 @@ namespace TimeExt.VirtualImplementations
         {
             return Tuple.Create(this.timeline, this.action).GetHashCode();
         }
+
+
+        public void Abort()
+        {
+            throw new NotImplementedException();
+        }
     }
 }

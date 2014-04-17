@@ -44,6 +44,8 @@ namespace TimeExt
     public interface ITask : IDisposable
     {
         void Join();
+
+        void Abort();
     }
 
     public interface ITaskJoin
