@@ -193,10 +193,9 @@ namespace TimeExt.Tests.VirtualImplementations
         public void タスクをアボートするとそれ以降の待ち処理は実行されない()
         {
             var tl = new Timeline(origin);
-            var task = default(ITask);
-            task = tl.CreateTask(() => { 
-                task.Abort();
-                tl.WaitForTime(TimeSpan.FromSeconds(100));
+            var task = tl.CreateTask(() => { 
+                tl.Abort();
+                tl.WaitForTime(TimeSpan.FromSeconds(60));
             });
 
             task.Join();

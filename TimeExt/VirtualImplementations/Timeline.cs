@@ -218,5 +218,10 @@ namespace TimeExt.VirtualImplementations
         {
             return this.CreateWaiter(timeSpanValues.Select(f).ToArray());
         }
+
+	// このメソッドは、テスト以外では使われない。プロダクトコードでは、代わりにITask.Abortを使うこと。
+        internal void Abort()
+        {
+        }
     }
 }

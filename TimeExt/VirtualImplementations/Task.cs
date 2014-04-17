@@ -48,7 +48,6 @@ namespace TimeExt.VirtualImplementations
 
         public void Abort()
         {
-            throw new NotImplementedException();
         }
     }
 }
