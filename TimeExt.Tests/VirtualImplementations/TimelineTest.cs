@@ -75,6 +75,21 @@ namespace TimeExt.Tests.VirtualImplementations
         }
         
         [Test]
+        public void タスクの中でタスクが扱える()
+        {
+            var tl = new Timeline(origin);
+
+            var count = 0;
+            tl.CreateTask(() =>
+            {
+                tl.CreateTask(() => { count++; });
+            });
+            tl.WaitForTime(TimeSpan.Zero);
+
+            Assert.That(count, Is.EqualTo(1));
+        }
+        
+        [Test]
         public void 内部で待つタスクとタイマーを同時に扱える()
         {
             var tl = new Timeline(origin);
