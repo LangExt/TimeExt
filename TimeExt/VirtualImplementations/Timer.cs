@@ -49,7 +49,8 @@ namespace TimeExt.VirtualImplementations
                 {
                     if (shouldInitialTick)
                     {
-                        this.isCalledWaitForTime = true;
+                        shouldInitialTick = false; // forループの中で再度initialTickが呼ばれないようにするフラグ
+                        this.isCalledWaitForTime = true; // 別のコンテキストから再度initialTickが呼ばれないようにするフラグ
                         timeline.CreateTask(RaiseTick);
                         continue;
                     }
