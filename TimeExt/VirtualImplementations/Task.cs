@@ -45,5 +45,10 @@ namespace TimeExt.VirtualImplementations
         {
             timeline.SetContextIfNeed(this.end);
         }
+
+        public void Abort()
+        {
+            throw new NotImplementedException();
+        }
     }
 }
