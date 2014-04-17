@@ -145,16 +145,16 @@ namespace TimeExt.VirtualImplementations
 
         internal long GetCurrentRemainedTicks(Timer timer)
         {
-            var timeline = this.contextStack.Peek();
-            if (this.remainedTicksDict.ContainsKey(Tuple.Create(timer, timeline)) == false)
+            var context = this.contextStack.Peek();
+            if (this.remainedTicksDict.ContainsKey(Tuple.Create(timer, context)) == false)
                 return 0;
-            return this.remainedTicksDict[Tuple.Create(timer, timeline)];
+            return this.remainedTicksDict[Tuple.Create(timer, context)];
         }
 
         internal void SetCurrentRemainedTicks(Timer timer, long newValue)
         {
-            var timeline = this.contextStack.Peek();
-            this.remainedTicksDict[Tuple.Create(timer, timeline)] = newValue;
+            var context = this.contextStack.Peek();
+            this.remainedTicksDict[Tuple.Create(timer, context)] = newValue;
         }
 
         public void WaitForTime(TimeSpan span)
