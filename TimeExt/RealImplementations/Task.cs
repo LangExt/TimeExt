@@ -9,10 +9,16 @@ namespace TimeExt.RealImplementations
     internal sealed class Task : ITask
     {
         internal readonly DotNetTasks.Task InternalTask;
+        readonly System.Threading.CancellationTokenSource cancelToken;
 
         internal Task(Action action)
         {
-            this.InternalTask = DotNetTasks.Task.Factory.StartNew(action);
+            this.InternalTask = DotNetTasks.Task.Factory.StartNew(() =>
+            {
+                var currentThread = System.Threading.Thread.CurrentThread;
+                cancelToken.Token.Register(() => currentThread.Abort());
+                action();
+            }, cancelToken.Token);
         }
 
         public void Join()
@@ -28,7 +34,7 @@ namespace TimeExt.RealImplementations
 
         public void Abort()
         {
-            throw new NotImplementedException();
+            cancelToken.Cancel();
         }
     }
 }
