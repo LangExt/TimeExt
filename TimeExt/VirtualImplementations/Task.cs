@@ -8,13 +8,11 @@ namespace TimeExt.VirtualImplementations
     internal sealed class Task : ITask 
     {
         readonly Timeline timeline;
-        readonly ExecutionContext currentContext;
         readonly Action action;
 
-        internal Task(Timeline timeline, ExecutionContext currentContext, Action action)
+        internal Task(Timeline timeline, Action action)
         {
             this.timeline = timeline;
-            this.currentContext = currentContext;
             this.action = action;
         }
 
