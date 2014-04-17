@@ -50,17 +50,22 @@ namespace TimeExt.VirtualImplementations
                     if (shouldInitialTick)
                     {
                         this.isCalledWaitForTime = true;
-                        timeline.CreateTask(() => EventHelper.Raise(this.tickHandler, this, EventArgs.Empty));
+                        timeline.CreateTask(RaiseTick);
                         continue;
                     }
 
                     var tickWait = TimeSpan.FromTicks(this.interval.Ticks);
                     timeline.contextStack.Peek().WaitForTime(tickWait);
-                    timeline.CreateTask(() => EventHelper.Raise(this.tickHandler, this, EventArgs.Empty));
+                    timeline.CreateTask(RaiseTick);
                 }
             });
             var remainedTicks = (e.Delta.Ticks + oldRemainedTicks) % this.interval.Ticks;
             this.timeline.SetCurrentRemainedTicks(this, remainedTicks);
+        }
+
+        void RaiseTick()
+        {
+            EventHelper.Raise(this.tickHandler, this, EventArgs.Empty);
         }
 
         public void Dispose()

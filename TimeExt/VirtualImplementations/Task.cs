@@ -39,7 +39,7 @@ namespace TimeExt.VirtualImplementations
             var other = obj as Task;
             if (other == null)
                 return false;
-            return object.ReferenceEquals(this.timeline, other.timeline) && object.ReferenceEquals(action, other.action);
+            return this.timeline == other.timeline && action == other.action;
         }
 
         public override int GetHashCode()
