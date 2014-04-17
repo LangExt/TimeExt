@@ -40,21 +40,17 @@ namespace TimeExt.VirtualImplementations
             var oldRemainedTicks = this.timeline.GetCurrentRemainedTicks(this);
             timeline.CreateTask(() =>
             {
-                var shouldInitialTick = this.initialTick == InitialTick.Enabled && !isCalledWaitForTime;
-                var totalTicksCount = (e.Delta.Ticks + oldRemainedTicks) / this.interval.Ticks
-                    + (shouldInitialTick ? 1 : 0);
+                if (this.initialTick == InitialTick.Enabled && !isCalledWaitForTime)
+                {
+                    this.isCalledWaitForTime = true; // 別のコンテキストから再度initialTickが呼ばれないようにするフラグを立てる
+                    timeline.CreateTask(RaiseTick);
+                }
+
+                var totalTicksCount = (e.Delta.Ticks + oldRemainedTicks) / this.interval.Ticks;
 
                 // 最大totalTicsCount回のTickイベントを発火する。
                 for (int i = 0; i < totalTicksCount; i++)
                 {
-                    if (shouldInitialTick)
-                    {
-                        shouldInitialTick = false; // forループの中で再度initialTickが呼ばれないようにするフラグ
-                        this.isCalledWaitForTime = true; // 別のコンテキストから再度initialTickが呼ばれないようにするフラグ
-                        timeline.CreateTask(RaiseTick);
-                        continue;
-                    }
-
                     var tickWait = TimeSpan.FromTicks(this.interval.Ticks);
                     timeline.contextStack.Peek().WaitForTime(tickWait);
                     timeline.CreateTask(RaiseTick);
