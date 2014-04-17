@@ -95,16 +95,16 @@ namespace TimeExt.Tests.VirtualImplementations
             var tl = new Timeline(origin);
 
             var countA = 0;
-            var task = tl.CreateTask(() => { countA++; tl.WaitForTime(TimeSpan.FromSeconds(6)); });
+            var timer = tl.CreateTimer(TimeSpan.FromSeconds(3), InitialTick.Enabled);
+            timer.Tick += delegate { countA++; };
 
             var countB = 0;
-            var timer = tl.CreateTimer(TimeSpan.FromSeconds(3), InitialTick.Enabled);
-            timer.Tick += delegate { countB++; };
+            var task = tl.CreateTask(() => { countB++; tl.WaitForTime(TimeSpan.FromSeconds(6)); });
 
             tl.WaitForTime(TimeSpan.FromSeconds(1));
 
-            Assert.That(countA, Is.EqualTo(1));
-            Assert.That(countB, Is.EqualTo(3)); // TODO: ここ正しくは1なのでは・・・
+            Assert.That(countA, Is.EqualTo(3));
+            Assert.That(countB, Is.EqualTo(1)); 
             Assert.That(tl.UtcNow, Is.EqualTo(origin + TimeSpan.FromSeconds(1)));
         }
 
