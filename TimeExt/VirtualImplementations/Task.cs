@@ -48,6 +48,7 @@ namespace TimeExt.VirtualImplementations
 
         public void Abort()
         {
+            timeline.Abort();
         }
     }
 }

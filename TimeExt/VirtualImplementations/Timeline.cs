@@ -11,6 +11,8 @@ namespace TimeExt.VirtualImplementations
 
         TimeSpan passed;
 
+        bool isAborted;
+
         internal ExecutionContext(DateTime origin)
         {
             this.origin = origin;
@@ -18,6 +20,8 @@ namespace TimeExt.VirtualImplementations
 
         internal void WaitForTime(TimeSpan span)
         {
+            if (isAborted) return;
+
             this.passed += span;
         }
 
@@ -32,6 +36,11 @@ namespace TimeExt.VirtualImplementations
             var diff = newOrigin - this.UtcNow;
             if(0 < diff.Ticks)
                 this.passed += diff;
+        }
+
+        internal void Abort()
+        {
+            this.isAborted = true;
         }
     }
 
@@ -222,6 +231,7 @@ namespace TimeExt.VirtualImplementations
 	// このメソッドは、テスト以外では使われない。プロダクトコードでは、代わりにITask.Abortを使うこと。
         internal void Abort()
         {
+            this.contextStack.Peek().Abort();
         }
     }
 }
