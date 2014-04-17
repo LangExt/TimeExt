@@ -203,6 +203,20 @@ namespace TimeExt.Tests.VirtualImplementations
             Assert.That(tl.UtcNow, Is.EqualTo(origin + TimeSpan.FromSeconds(0)));
         }
 
+        [Test]
+        public void タスクをアボートしてもそれ以前の待ち処理は実行される()
+        {
+            var tl = new Timeline(origin);
+            var task = tl.CreateTask(() => { 
+                tl.WaitForTime(TimeSpan.FromSeconds(60));
+                tl.Abort();
+            });
+
+            task.Join();
+
+            Assert.That(tl.UtcNow, Is.EqualTo(origin + TimeSpan.FromSeconds(60)));
+        }
+
         public class タイマー起動時にTickしないタイマーのテスト
         {
             readonly DateTime origin = DateTime.Parse("2014/01/01").ToUniversalTime();
