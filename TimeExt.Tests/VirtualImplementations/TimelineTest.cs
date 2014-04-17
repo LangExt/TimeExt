@@ -73,7 +73,7 @@ namespace TimeExt.Tests.VirtualImplementations
             Assert.That(countB, Is.EqualTo(1));
             Assert.That(tl.UtcNow, Is.EqualTo(origin + TimeSpan.FromSeconds(3)));
         }
-        
+
         [Test]
         public void タスクの中でタスクが扱える()
         {
@@ -88,7 +88,7 @@ namespace TimeExt.Tests.VirtualImplementations
 
             Assert.That(count, Is.EqualTo(1));
         }
-        
+
         [Test]
         public void 内部で待つタスクとタイマーを同時に扱える()
         {
@@ -99,12 +99,12 @@ namespace TimeExt.Tests.VirtualImplementations
 
             var countB = 0;
             var timer = tl.CreateTimer(TimeSpan.FromSeconds(3), InitialTick.Enabled);
-            timer.Tick += delegate { countB++;  };
+            timer.Tick += delegate { countB++; };
 
             tl.WaitForTime(TimeSpan.FromSeconds(1));
 
             Assert.That(countA, Is.EqualTo(1));
-            Assert.That(countB, Is.EqualTo(3));
+            Assert.That(countB, Is.EqualTo(3)); // TODO: ここ正しくは1なのでは・・・
             Assert.That(tl.UtcNow, Is.EqualTo(origin + TimeSpan.FromSeconds(1)));
         }
 
@@ -118,7 +118,7 @@ namespace TimeExt.Tests.VirtualImplementations
 
             var countB = 0;
             var timer = tl.CreateTimer(TimeSpan.FromSeconds(3), InitialTick.Enabled);
-            timer.Tick += delegate { countB++;  tl.WaitForTime(TimeSpan.FromSeconds(1)); };
+            timer.Tick += delegate { countB++; tl.WaitForTime(TimeSpan.FromSeconds(1)); };
 
             tl.WaitForTime(TimeSpan.FromSeconds(10));
 
@@ -150,7 +150,7 @@ namespace TimeExt.Tests.VirtualImplementations
             var taskC = tl.CreateTask(() => { tl.WaitForTime(TimeSpan.FromSeconds(5)); });
             tl.WaitForTime(TimeSpan.FromSeconds(1));
 
-            factory.CreateTaskJoin().JoinAll(new []{ taskA, taskB, taskC });
+            factory.CreateTaskJoin().JoinAll(new[] { taskA, taskB, taskC });
 
             Assert.That(tl.UtcNow, Is.EqualTo(origin + TimeSpan.FromSeconds(20)));
         }
@@ -168,7 +168,6 @@ namespace TimeExt.Tests.VirtualImplementations
             ITimeline tl = new Timeline(DateTime.Parse(now).ToUniversalTime());
             Assert.That(tl.UtcNow, Is.EqualTo(DateTime.Parse(now).ToUniversalTime()));
         }
-
 
         [Test]
         public void Timelineは時間を進めると現在時刻がその分進んでいる()
@@ -212,7 +211,7 @@ namespace TimeExt.Tests.VirtualImplementations
                 var timer = tl.CreateTimer(TimeSpan.FromSeconds(3));
                 var wait = tl.CreateWaiter(TimeSpan.FromSeconds(9), TimeSpan.FromSeconds(1), TimeSpan.FromSeconds(1), TimeSpan.FromSeconds(1), TimeSpan.FromTicks(1));
                 var count = 0;
-                timer.Tick += (sender, args) => { ++count; wait(); };
+                timer.Tick += (sender, args) => { var now = tl.UtcNow; ++count; wait(); };
                 tl.WaitForTime(TimeSpan.FromSeconds(3));
 
                 Assert.That(count, Is.EqualTo(4));
@@ -260,6 +259,7 @@ namespace TimeExt.Tests.VirtualImplementations
                 Assert.That(isFired, Is.True);
                 Assert.That(tl.UtcNow, Is.EqualTo(this.origin + TimeSpan.FromSeconds(3)));
             }
+
 
             [TestCase(1, 8)]
             [TestCase(4, 5)]
@@ -400,6 +400,7 @@ namespace TimeExt.Tests.VirtualImplementations
                 Assert.That(count, Is.EqualTo(2));
                 Assert.That(tl.UtcNow, Is.EqualTo(this.origin + TimeSpan.FromSeconds(3)));
             }
+
 
             [TestCase(1, 8)]
             [TestCase(4, 5)]

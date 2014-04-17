@@ -105,7 +105,7 @@ namespace TimeExt.VirtualImplementations
     {
         internal event EventHandler<ChangingNowEventArgs> ChangingNow;
 
-        readonly Stack<ExecutionContext> contextStack = new Stack<ExecutionContext>();
+        internal readonly Stack<ExecutionContext> contextStack = new Stack<ExecutionContext>();
 
         // 既に実行されたものを再度実行しないようにするために、scheduledTasksとして保持しておく
         readonly ISet<ScheduledTask> scheduledTasks = new HashSet<ScheduledTask>();
@@ -180,17 +180,9 @@ namespace TimeExt.VirtualImplementations
 
         public ITask CreateTask(Action action)
         {
-            return CreateTask(action, this.UtcNow, true);
-        }
-
-        internal Task CreateTask(Action action,  bool add)
-        {
-            return CreateTask(action, this.UtcNow, add);
-        }
-
-        internal Task CreateTask(Action action, DateTime now, bool shouldAddChangingHandler)
-        {
-            return new Task(this, this.contextStack.Peek(), now, action, shouldAddChangingHandler);
+            var task = new Task(this, this.contextStack.Peek(), this.UtcNow, action);
+            this.Schedule(new ScheduledTask(task, this.UtcNow));
+            return task;
         }
 
         public ITimer CreateTimer(TimeSpan interval, InitialTick initialTick = InitialTick.Disabled)

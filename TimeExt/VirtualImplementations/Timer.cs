@@ -25,7 +25,6 @@ namespace TimeExt.VirtualImplementations
         readonly InitialTick initialTick;
 
         bool isCalledWaitForTime = false;
-        Task tickerTask;
 
         internal Timer(Timeline timeline, TimeSpan interval, InitialTick initialTick)
         {
@@ -34,29 +33,34 @@ namespace TimeExt.VirtualImplementations
             this.initialTick = initialTick;
 
             timeline.ChangingNow += this.OnChangingNow;
-            tickerTask = (this.timeline.CreateTask(() => { EventHelper.Raise(this.tickHandler, this, EventArgs.Empty); }, false));
         }
 
         private void OnChangingNow(object sender, ChangingNowEventArgs e)
         {
-
-            if (this.initialTick == InitialTick.Enabled && this.isCalledWaitForTime == false)
-            {
-                this.isCalledWaitForTime = true;
-                timeline.Schedule(new ScheduledTask(tickerTask, timeline.UtcNow));
-            }
-
             var oldRemainedTicks = this.timeline.GetCurrentRemainedTicks(this);
-            var totalTicksCount = (e.Delta.Ticks + oldRemainedTicks) / this.interval.Ticks;
+            timeline.CreateTask(() =>
+            {
+                var totalTicksCount = (e.Delta.Ticks + oldRemainedTicks) / this.interval.Ticks 
+                    + (this.initialTick == InitialTick.Enabled && !isCalledWaitForTime ? 1 : 0);
+
+                // 最大totalTicsCount回のTickイベントを発火する。
+                for (int i = 0; i < totalTicksCount; i++)
+                {   
+                    if (i == 0 && this.initialTick == InitialTick.Enabled && this.isCalledWaitForTime == false)
+                    {
+                        this.isCalledWaitForTime = true;
+                        EventHelper.Raise(this.tickHandler, this, EventArgs.Empty);
+                        continue;
+                    }
+                    else if(this.isCalledWaitForTime)
+                    { 
+			timeline.contextStack.Peek().WaitForTime(TimeSpan.FromTicks(this.interval.Ticks * (i + 1)));
+                        EventHelper.Raise(this.tickHandler, this, EventArgs.Empty);
+                    }
+                }
+            });
             var remainedTicks = (e.Delta.Ticks + oldRemainedTicks) % this.interval.Ticks;
             this.timeline.SetCurrentRemainedTicks(this, remainedTicks);
-
-            // 最大totalTicsCount回のTickイベントを発火する。
-            for (int i = 0; i < totalTicksCount; i++)
-            {
-                var now = this.timeline.UtcNow + (TimeSpan.FromTicks(this.interval.Ticks * (i + 1 /* InitialTickd期間分 */)));
-                timeline.Schedule(new ScheduledTask(tickerTask, now));
-            }
         }
 
         public void Dispose()

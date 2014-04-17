@@ -12,15 +12,12 @@ namespace TimeExt.VirtualImplementations
         readonly DateTime origin;
         readonly Action action;
 
-        internal Task(Timeline timeline, ExecutionContext currentContext, DateTime origin, Action action, bool ashouldAddChangingHandler)
+        internal Task(Timeline timeline, ExecutionContext currentContext, DateTime origin, Action action)
         {
             this.timeline = timeline;
             this.currentContext = currentContext;
             this.origin = origin;
             this.action = action;
-
-            if(ashouldAddChangingHandler)
-                timeline.ChangingNow += OnChangingNow;
         }
 
         void OnChangingNow(object sender, EventArgs e)
