@@ -33,5 +33,18 @@ namespace TimeExt.VirtualImplementations
         {
             timeline.SetContextIfNeed(this.end);
         }
+        
+        public override bool Equals(object obj)
+        {
+            var other = obj as Task;
+            if (other == null)
+                return false;
+            return object.ReferenceEquals(this.timeline, other.timeline) && object.ReferenceEquals(action, other.action);
+        }
+
+        public override int GetHashCode()
+        {
+            return Tuple.Create(this.timeline, this.action).GetHashCode();
+        }
     }
 }

@@ -84,7 +84,7 @@ namespace TimeExt.VirtualImplementations
             var other = obj as ScheduledTask;
             if (other == null)
                 return false;
-            return object.ReferenceEquals(this.Task, other.Task) && this.Origin == other.Origin;
+            return this.Task.Equals(other.Task) && this.Origin == other.Origin;
         }
 
         public override int GetHashCode()
