@@ -180,7 +180,7 @@ namespace TimeExt.VirtualImplementations
 
         public ITask CreateTask(Action action)
         {
-            var task = new Task(this, this.contextStack.Peek(), this.UtcNow, action);
+            var task = new Task(this, this.contextStack.Peek(), action);
             this.Schedule(new ScheduledTask(task, this.UtcNow));
             return task;
         }

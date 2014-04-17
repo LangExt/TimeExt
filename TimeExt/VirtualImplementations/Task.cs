@@ -9,21 +9,13 @@ namespace TimeExt.VirtualImplementations
     {
         readonly Timeline timeline;
         readonly ExecutionContext currentContext;
-        readonly DateTime origin;
         readonly Action action;
 
-        internal Task(Timeline timeline, ExecutionContext currentContext, DateTime origin, Action action)
+        internal Task(Timeline timeline, ExecutionContext currentContext, Action action)
         {
             this.timeline = timeline;
             this.currentContext = currentContext;
-            this.origin = origin;
             this.action = action;
-        }
-
-        void OnChangingNow(object sender, EventArgs e)
-        {
-            if (currentContext.UtcNow <= origin)
-                this.timeline.Schedule(new ScheduledTask(this, origin));
         }
 
         DateTime end;
