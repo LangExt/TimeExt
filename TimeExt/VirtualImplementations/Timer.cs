@@ -40,23 +40,22 @@ namespace TimeExt.VirtualImplementations
             var oldRemainedTicks = this.timeline.GetCurrentRemainedTicks(this);
             timeline.CreateTask(() =>
             {
-                var totalTicksCount = (e.Delta.Ticks + oldRemainedTicks) / this.interval.Ticks 
-                    + (this.initialTick == InitialTick.Enabled && !isCalledWaitForTime ? 1 : 0);
+                var shouldInitialTick = this.initialTick == InitialTick.Enabled && !isCalledWaitForTime;
+                var totalTicksCount = (e.Delta.Ticks + oldRemainedTicks) / this.interval.Ticks
+                    + (shouldInitialTick ? 1 : 0);
 
                 // 最大totalTicsCount回のTickイベントを発火する。
                 for (int i = 0; i < totalTicksCount; i++)
-                {   
-                    if (i == 0 && this.initialTick == InitialTick.Enabled && this.isCalledWaitForTime == false)
+                {
+                    if (shouldInitialTick)
                     {
                         this.isCalledWaitForTime = true;
                         EventHelper.Raise(this.tickHandler, this, EventArgs.Empty);
                         continue;
                     }
-                    else if(this.isCalledWaitForTime)
-                    { 
-			timeline.contextStack.Peek().WaitForTime(TimeSpan.FromTicks(this.interval.Ticks * (i + 1)));
-                        EventHelper.Raise(this.tickHandler, this, EventArgs.Empty);
-                    }
+
+                    timeline.contextStack.Peek().WaitForTime(TimeSpan.FromTicks(this.interval.Ticks * (i + 1)));
+                    EventHelper.Raise(this.tickHandler, this, EventArgs.Empty);
                 }
             });
             var remainedTicks = (e.Delta.Ticks + oldRemainedTicks) % this.interval.Ticks;
