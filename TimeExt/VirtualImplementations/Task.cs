@@ -37,11 +37,19 @@ namespace TimeExt.VirtualImplementations
             {
                 action();
             }
+            catch (System.Threading.ThreadAbortException)
+            {
+                // ThreadAbortExceptionは無視する
+                throw;
+            }
             catch (Exception e)
             {
                 this.exceptions.Add(e);
             }
-            this.end = this.timeline.UtcNow;
+            finally
+            {
+                this.end = this.timeline.UtcNow;
+            }
         }
 
         public void Dispose()
