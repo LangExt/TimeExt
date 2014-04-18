@@ -205,24 +205,6 @@ namespace TimeExt.VirtualImplementations
             return new Stopwatch(() => UtcNow - origin);
         }
 
-        // Waiterの生成はこのクラスから分離すべきかも
-        public Action CreateWaiter(params TimeSpan[] timeSpans)
-        {
-            int i = 0;
-            return () =>
-            {
-                if (timeSpans.Length <= i) throw new InvalidOperationException("予期せぬwait");
-
-                WaitForTime(timeSpans[i++]);
-            };
-        }
-
-        // Waiterの生成はこのクラスから分離すべきかも
-        public Action CreateWaiter(Func<double, TimeSpan> f, params double[] timeSpanValues)
-        {
-            return this.CreateWaiter(timeSpanValues.Select(f).ToArray());
-        }
-
 	// このメソッドは、テスト以外では使われない。プロダクトコードでは、代わりにITask.Abortを使うこと。
         internal void Abort()
         {
