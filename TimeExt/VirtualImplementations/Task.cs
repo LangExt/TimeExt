@@ -17,10 +17,18 @@ namespace TimeExt.VirtualImplementations
         }
 
         DateTime end;
+        List<Exception> exceptions = new List<Exception>();
 
         internal void Execute()
         {
-            action();
+            try
+            {
+                action();
+            }
+            catch (Exception e)
+            {
+                this.exceptions.Add(e);
+            }
             this.end = this.timeline.UtcNow;
         }
 
@@ -32,6 +40,8 @@ namespace TimeExt.VirtualImplementations
         public void Join()
         {
             timeline.SetContextIfNeed(this.end);
+            if (this.exceptions.Count != 0)
+                throw new AggregateException(this.exceptions);
         }
         
         public override bool Equals(object obj)

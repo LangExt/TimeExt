@@ -9,8 +9,21 @@ namespace TimeExt.VirtualImplementations
     {
         public void JoinAll(IEnumerable<ITask> tasks)
         {
+            var exceptions = new List<Exception>();
             foreach (var task in tasks)
-                task.Join();
+            {
+                try
+                {
+                    task.Join();
+                }
+                catch (Exception e)
+                {
+                    exceptions.Add(e);
+                }
+            }
+
+            if (exceptions.Count != 0)
+                throw new AggregateException(exceptions);
         }
     }
 }

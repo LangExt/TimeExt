@@ -75,6 +75,37 @@ namespace TimeExt.Tests.VirtualImplementations
         }
 
         [Test]
+        public void タスクの中で例外を投げてもJoinを呼び出すまでは無視される()
+        {
+            var tl = new Timeline(origin);
+
+            var task = tl.CreateTask(() => { throw new Exception("oops!"); });
+
+            Assert.That(() => task.Join(), Throws.Exception.TypeOf<AggregateException>().And.InnerException.TypeOf<Exception>());
+        }
+
+        [Test]
+        public void 複数のタスクの中で例外を投げてもJoinするまでは無視される()
+        {
+            var tl = new Timeline(origin);
+
+            var taskA = tl.CreateTask(() => { throw new Exception("oops!"); });
+            var taskB = tl.CreateTask(() => { throw new InvalidOperationException("oops!"); });
+
+            try
+            {
+                factory.CreateTaskJoin().JoinAll(new[] { taskA, taskB });
+            }
+            catch (AggregateException e)
+            {
+                e = e.Flatten();
+                Assert.That(e.InnerExceptions.Count, Is.EqualTo(2));
+                Assert.That(e.InnerExceptions[0], Is.TypeOf<Exception>());
+                Assert.That(e.InnerExceptions[1], Is.TypeOf<InvalidOperationException>());
+            }
+        }
+
+        [Test]
         public void タスクの中でタスクが扱える()
         {
             var tl = new Timeline(origin);
