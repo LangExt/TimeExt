@@ -23,14 +23,16 @@ namespace TimeExt.VirtualImplementations
         readonly TimeSpan interval;
         readonly Timeline timeline;
         readonly InitialTick initialTick;
+        readonly ExecutionContext context;
 
         bool isCalledWaitForTime = false;
 
-        internal Timer(Timeline timeline, TimeSpan interval, InitialTick initialTick)
+        internal Timer(Timeline timeline, ExecutionContext context, TimeSpan interval, InitialTick initialTick)
         {
             this.timeline = timeline;
             this.interval = interval;
             this.initialTick = initialTick;
+            this.context = context;
 
             timeline.ChangingNow += this.OnChangingNow;
             timeline.ChangedNow += this.OnChangedNow;
@@ -49,14 +51,15 @@ namespace TimeExt.VirtualImplementations
         // この中で必要に応じてTickイベントを発火する。
         private void OnChangedNow(object sender, ChangedNowEventArgs e)
         {
-            var oldRemainedTicks = this.timeline.GetCurrentRemainedTicks(this);
+            var oldRemainedTicks = 0;// this.timeline.GetCurrentRemainedTicks(this, context);
+
             var totalTicksCount = (e.Delta.Ticks + oldRemainedTicks) / this.interval.Ticks;
             var remainedTicks = (e.Delta.Ticks + oldRemainedTicks) % this.interval.Ticks;
-            this.timeline.SetCurrentRemainedTicks(this, remainedTicks);
+            this.timeline.SetCurrentRemainedTicks(this, context, remainedTicks);
             // 最大totalTicsCount回のTickイベントを発火する。
             for (int i = 0; i < totalTicksCount; i++)
             {
-                var now = this.timeline.UtcNow - e.Delta + (TimeSpan.FromTicks(this.interval.Ticks * (i + 1) - oldRemainedTicks));
+                var now = this.context.UtcNow + (TimeSpan.FromTicks(this.interval.Ticks * (i + 1) - oldRemainedTicks));
                 this.timeline.Schedule(new ScheduledExecution(this, now));
             }
         }

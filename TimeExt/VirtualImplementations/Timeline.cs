@@ -158,18 +158,16 @@ namespace TimeExt.VirtualImplementations
         readonly IDictionary<Tuple<Timer, ExecutionContext>, long> remainedTicksDict =
             new Dictionary<Tuple<Timer, ExecutionContext>, long>();
 
-        internal long GetCurrentRemainedTicks(Timer timer)
+        internal long GetCurrentRemainedTicks(Timer timer, ExecutionContext context)
         {
-            var timeline = this.contextStack.Peek();
-            if (this.remainedTicksDict.ContainsKey(Tuple.Create(timer, timeline)) == false)
+            if (this.remainedTicksDict.ContainsKey(Tuple.Create(timer, context)) == false)
                 return 0;
-            return this.remainedTicksDict[Tuple.Create(timer, timeline)];
+            return this.remainedTicksDict[Tuple.Create(timer, context)];
         }
 
-        internal void SetCurrentRemainedTicks(Timer timer, long newValue)
+        internal void SetCurrentRemainedTicks(Timer timer, ExecutionContext context, long newValue)
         {
-            var timeline = this.contextStack.Peek();
-            this.remainedTicksDict[Tuple.Create(timer, timeline)] = newValue;
+            this.remainedTicksDict[Tuple.Create(timer, context)] = newValue;
         }
 
         public void WaitForTime(TimeSpan span)
@@ -178,8 +176,9 @@ namespace TimeExt.VirtualImplementations
             // 現在時刻を指定時間分進めます。
             // その過程で、タイマーと連動(ChangedNowにタイマーのOnChangedNowが登録される)して、
             // 指定周期が満たされた分だけタイマーのTickイベントを発火します。
-            contextStack.Peek().WaitForTime(span);
+
             EventHelper.Raise(this.ChangedNow, this, new ChangedNowEventArgs(span));
+            contextStack.Peek().WaitForTime(span);
         }
 
         internal void SetContextIfNeed(DateTime origin)
@@ -203,7 +202,7 @@ namespace TimeExt.VirtualImplementations
 
         public ITimer CreateTimer(TimeSpan interval, InitialTick initialTick = InitialTick.Disabled)
         {
-            return new Timer(this, interval, initialTick);
+            return new Timer(this, this.contextStack.Peek(), interval, initialTick);
         }
 
         public IStopwatch CreateStopwatch()
