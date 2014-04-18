@@ -411,7 +411,7 @@ namespace TimeExt.Tests.VirtualImplementations
                 var timer = tl.CreateTimer(TimeSpan.FromSeconds(3), InitialTick.Enabled);
                 var wait = tl.CreateWaiter(TimeSpan.FromSeconds(9), TimeSpan.FromSeconds(1), TimeSpan.FromSeconds(1), TimeSpan.FromSeconds(1), TimeSpan.FromTicks(1));
                 var count = 0;
-                timer.Tick += (sender, args) => { ++count; wait(); };
+                timer.Tick += (sender, args) => { var t = tl; ++count; wait(); };
                 tl.WaitForTime(TimeSpan.FromSeconds(3));
 
                 Assert.That(count, Is.EqualTo(4));

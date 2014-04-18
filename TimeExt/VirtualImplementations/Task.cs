@@ -8,7 +8,7 @@ namespace TimeExt.VirtualImplementations
     internal sealed class Task : ITask 
     {
         readonly Timeline timeline;
-        readonly Action action;
+        internal readonly Action action;
 
         internal Task(Timeline timeline, Action action)
         {

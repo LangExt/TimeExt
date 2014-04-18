@@ -122,7 +122,7 @@ namespace TimeExt.VirtualImplementations
         internal void Schedule(ScheduledTask scheduled)
         {
             // Scheduleがリクエストされても、既にscheduledTasksに同じスケジュールがある場合は実行しない
-            if (this.scheduledTasks.Contains(scheduled))
+            if (scheduled.Task.action.Method.ToString() == "Void RaiseTick()" && this.scheduledTasks.Contains(scheduled))
                 return;
 
             this.scheduledTasks.Add(scheduled);

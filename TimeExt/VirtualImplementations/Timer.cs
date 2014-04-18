@@ -38,26 +38,37 @@ namespace TimeExt.VirtualImplementations
         private void OnChangingNow(object sender, ChangingNowEventArgs e)
         {
             var oldRemainedTicks = this.timeline.GetCurrentRemainedTicks(this);
-            timeline.CreateTask(() =>
-            {
-                if (this.initialTick == InitialTick.Enabled && !isCalledWaitForTime)
-                {
-                    this.isCalledWaitForTime = true; // 別のコンテキストから再度initialTickが呼ばれないようにするフラグを立てる
-                    timeline.CreateTask(RaiseTick);
-                }
-
-                var totalTicksCount = (e.Delta.Ticks + oldRemainedTicks) / this.interval.Ticks;
-
-                // 最大totalTicsCount回のTickイベントを発火する。
-                for (int i = 0; i < totalTicksCount; i++)
-                {
-                    var tickWait = TimeSpan.FromTicks(this.interval.Ticks);
-                    timeline.contextStack.Peek().WaitForTime(tickWait);
-                    timeline.CreateTask(RaiseTick);
-                }
-            });
+            this.e[Tuple.Create(timeline.UtcNow, this)] = e;
+            this.oldRemainedTicks[Tuple.Create(timeline.UtcNow, this)] = oldRemainedTicks;
+            timeline.CreateTask(DoTicks);
             var remainedTicks = (e.Delta.Ticks + oldRemainedTicks) % this.interval.Ticks;
             this.timeline.SetCurrentRemainedTicks(this, remainedTicks);
+        }
+
+        Dictionary<Tuple<DateTime, Timer>, ChangingNowEventArgs> e = new Dictionary<Tuple<DateTime, Timer>, ChangingNowEventArgs>();
+        Dictionary<Tuple<DateTime, Timer>, long> oldRemainedTicks = new Dictionary<Tuple<DateTime, Timer>, long>();
+
+        internal void DoTicks()
+        {
+            var e = this.e[Tuple.Create(timeline.UtcNow, this)];
+            var oldRemainedTicks = this.oldRemainedTicks[Tuple.Create(timeline.UtcNow, this)];
+
+
+            if (this.initialTick == InitialTick.Enabled && !isCalledWaitForTime)
+            {
+                this.isCalledWaitForTime = true; // 別のコンテキストから再度initialTickが呼ばれないようにするフラグを立てる
+                timeline.CreateTask(RaiseTick);
+            }
+
+            var totalTicksCount = (e.Delta.Ticks + oldRemainedTicks) / this.interval.Ticks;
+
+            // 最大totalTicsCount回のTickイベントを発火する。
+            for (int i = 0; i < totalTicksCount; i++)
+            {
+                var tickWait = TimeSpan.FromTicks(this.interval.Ticks);
+                timeline.contextStack.Peek().WaitForTime(tickWait);
+                timeline.CreateTask(RaiseTick);
+            }
         }
 
         void RaiseTick()
