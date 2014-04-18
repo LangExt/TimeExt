@@ -126,7 +126,7 @@ namespace TimeExt.Tests.VirtualImplementations
             var tl = new Timeline(origin);
 
             var countA = 0;
-            var task = tl.CreateTask(() => { countA++; tl.WaitForTime(TimeSpan.FromSeconds(6)); });
+            var task = tl.CreateTask(() => { countA++; tl.WaitForTime(TimeSpan.FromSeconds(6)); }); // ここではまだtimerが生成されてないのでtickは呼ばれない。
 
             var countB = 0;
             var timer = tl.CreateTimer(TimeSpan.FromSeconds(3), InitialTick.Enabled);
@@ -135,7 +135,7 @@ namespace TimeExt.Tests.VirtualImplementations
             tl.WaitForTime(TimeSpan.FromSeconds(1));
 
             Assert.That(countA, Is.EqualTo(1));
-            Assert.That(countB, Is.EqualTo(3));
+            Assert.That(countB, Is.EqualTo(1));
             Assert.That(tl.UtcNow, Is.EqualTo(origin + TimeSpan.FromSeconds(1)));
         }
 
