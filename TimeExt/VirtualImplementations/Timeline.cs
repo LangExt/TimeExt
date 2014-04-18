@@ -196,7 +196,9 @@ namespace TimeExt.VirtualImplementations
 
         public ITask CreateTask(Action action)
         {
-            return new Task(this, this.contextStack.Peek(), UtcNow, action);
+            var task = new Task(this, this.contextStack.Peek(), UtcNow, action);
+            this.WaitForTime(TimeSpan.Zero);
+            return task;
         }
 
         public ITimer CreateTimer(TimeSpan interval, InitialTick initialTick = InitialTick.Disabled)
