@@ -43,6 +43,28 @@ namespace TimeExt.Tests.VirtualImplementations
         }
 
         [Test]
+        public void 複数のタイマーが干渉しない()
+        {
+            var tl = new Timeline(origin);
+
+            var timerA = tl.CreateTimer(TimeSpan.FromSeconds(5));
+            var waitA = tl.CreateWaiter(TimeSpan.FromSeconds, 10, 2, 2, 2, 2);
+            var historyA = new List<DateTime>();
+            timerA.Tick += (sender, arg) => { historyA.Add(tl.UtcNow); waitA(); };
+
+            var timerB = tl.CreateTimer(TimeSpan.FromSeconds(5));
+            var waitB = tl.CreateWaiter(TimeSpan.FromSeconds, 2, 2, 2, 2, 2);
+            var historyB = new List<DateTime>();
+            timerB.Tick += (sender, arg) => { historyB.Add(tl.UtcNow); waitB(); };
+
+            tl.WaitForTime(TimeSpan.FromSeconds(29));
+
+            var exceptedHistory = Enumerable.Repeat(origin, 5).Select((d, i) => d + TimeSpan.FromSeconds(5 * (i + 1))).ToArray();
+            Assert.That(historyA.ToArray(), Is.EqualTo(exceptedHistory));
+            Assert.That(historyB.ToArray(), Is.EqualTo(exceptedHistory));
+            Assert.That(tl.UtcNow, Is.EqualTo(origin + TimeSpan.FromSeconds(29)));
+        }
+        [Test]
         public void タスクを扱える()
         {
             var tl = new Timeline(origin);
