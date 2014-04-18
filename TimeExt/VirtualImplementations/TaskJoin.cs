@@ -16,6 +16,11 @@ namespace TimeExt.VirtualImplementations
                 {
                     task.Join();
                 }
+                catch (System.Threading.ThreadAbortException)
+                {
+                    // ThreadAbortExceptionは無視
+                    throw;
+                }
                 catch (Exception e)
                 {
                     exceptions.Add(e);
