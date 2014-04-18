@@ -5,7 +5,7 @@ using System.Text;
 
 namespace TimeExt.RealImplementations
 {
-    internal sealed class Stopwatch : IStopwatch
+    public sealed class Stopwatch : IStopwatch
     {
         readonly System.Diagnostics.Stopwatch sw = System.Diagnostics.Stopwatch.StartNew();
 

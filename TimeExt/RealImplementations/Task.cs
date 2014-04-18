@@ -6,19 +6,13 @@ using DotNetTasks = System.Threading.Tasks;
 
 namespace TimeExt.RealImplementations
 {
-    internal sealed class Task : ITask
+    public sealed class Task : ITask
     {
         internal readonly DotNetTasks.Task InternalTask;
-        readonly System.Threading.CancellationTokenSource cancelToken;
 
         internal Task(Action action)
         {
-            this.InternalTask = DotNetTasks.Task.Factory.StartNew(() =>
-            {
-                var currentThread = System.Threading.Thread.CurrentThread;
-                cancelToken.Token.Register(() => currentThread.Abort());
-                action();
-            }, cancelToken.Token);
+            this.InternalTask = DotNetTasks.Task.Factory.StartNew(action);
         }
 
         public void Join()
@@ -29,12 +23,6 @@ namespace TimeExt.RealImplementations
         public void Dispose()
         {
             this.InternalTask.Dispose();
-        }
-
-
-        public void Abort()
-        {
-            cancelToken.Cancel();
         }
     }
 }

@@ -5,39 +5,35 @@ using System.Text;
 
 namespace TimeExt.VirtualImplementations
 {
-    internal sealed class Task : ITask 
+    internal sealed class Task : ITask, IExecution
     {
         readonly Timeline timeline;
-        internal readonly Action action;
+        readonly ExecutionContext currentContext;
+        readonly DateTime origin;
+        readonly Action action;
 
-        internal Task(Timeline timeline, Action action)
+        internal Task(Timeline timeline, ExecutionContext currentContext, DateTime origin, Action action)
         {
             this.timeline = timeline;
+            this.currentContext = currentContext;
+            this.origin = origin;
             this.action = action;
+
+            timeline.ChangingNow += OnChangingNow;
+        }
+
+        void OnChangingNow(object sender, EventArgs e)
+        {
+            if (origin <= currentContext.UtcNow)
+                this.timeline.Schedule(new ScheduledExecution(this, origin));
         }
 
         DateTime end;
-        List<Exception> exceptions = new List<Exception>();
 
-        internal void Execute()
+        public void Execute()
         {
-            try
-            {
-                action();
-            }
-            catch (System.Threading.ThreadAbortException)
-            {
-                // ThreadAbortExceptionは無視する
-                throw;
-            }
-            catch (Exception e)
-            {
-                this.exceptions.Add(e);
-            }
-            finally
-            {
-                this.end = this.timeline.UtcNow;
-            }
+            action();
+            this.end = this.timeline.UtcNow;
         }
 
         public void Dispose()
@@ -48,27 +44,6 @@ namespace TimeExt.VirtualImplementations
         public void Join()
         {
             timeline.SetContextIfNeed(this.end);
-            if (this.exceptions.Count != 0)
-                throw new AggregateException(this.exceptions);
-        }
-        
-        public override bool Equals(object obj)
-        {
-            var other = obj as Task;
-            if (other == null)
-                return false;
-            return this.timeline == other.timeline && action == other.action;
-        }
-
-        public override int GetHashCode()
-        {
-            return Tuple.Create(this.timeline, this.action).GetHashCode();
-        }
-
-
-        public void Abort()
-        {
-            timeline.Abort();
         }
     }
 }

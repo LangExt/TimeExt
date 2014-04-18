@@ -11,8 +11,6 @@ namespace TimeExt.VirtualImplementations
 
         TimeSpan passed;
 
-        bool isAborted;
-
         internal ExecutionContext(DateTime origin)
         {
             this.origin = origin;
@@ -20,8 +18,6 @@ namespace TimeExt.VirtualImplementations
 
         internal void WaitForTime(TimeSpan span)
         {
-            if (isAborted) return;
-
             this.passed += span;
         }
 
@@ -37,18 +33,13 @@ namespace TimeExt.VirtualImplementations
             if(0 < diff.Ticks)
                 this.passed += diff;
         }
-
-        internal void Abort()
-        {
-            this.isAborted = true;
-        }
     }
 
-    internal sealed class ChangingNowEventArgs : EventArgs
+    internal sealed class ChangedNowEventArgs : EventArgs
     {
         internal readonly TimeSpan Delta;
 
-        internal ChangingNowEventArgs(TimeSpan delta)
+        internal ChangedNowEventArgs(TimeSpan delta)
         {
             this.Delta = delta;
         }
@@ -72,33 +63,38 @@ namespace TimeExt.VirtualImplementations
         }
     }
 
+    internal interface IExecution
+    {
+        void Execute();
+    }
+
     /// <summary>
-    /// スケジュールされたタスクの情報を保持するクラスです。
-    /// スケジュールされたタスクの情報には、スケジュールされたタスクそのものと、
+    /// 実行のスケジュール情報を保持するクラスです。
+    /// 実行のスケジュール情報には、スケジュールされた実行と、
     /// スケジュールされている時刻が含まれます。
     /// </summary>
-    internal sealed class ScheduledTask
+    internal sealed class ScheduledExecution
     {
-        internal readonly Task Task;
+        internal readonly IExecution Execution;
         internal readonly DateTime Origin;
 
-        internal ScheduledTask(Task task, DateTime origin)
+        internal ScheduledExecution(IExecution execution, DateTime origin)
         {
-            this.Task = task;
+            this.Execution = execution;
             this.Origin = origin;
         }
 
         public override bool Equals(object obj)
         {
-            var other = obj as ScheduledTask;
+            var other = obj as ScheduledExecution;
             if (other == null)
                 return false;
-            return this.Task.Equals(other.Task) && this.Origin == other.Origin;
+            return object.ReferenceEquals(this.Execution, other.Execution) && this.Origin == other.Origin;
         }
 
         public override int GetHashCode()
         {
-            return Tuple.Create(this.Task, this.Origin).GetHashCode();
+            return Tuple.Create(this.Execution, this.Origin).GetHashCode();
         }
     }
 
@@ -110,24 +106,25 @@ namespace TimeExt.VirtualImplementations
     /// アプリケーションで使用するITimelineをそのインスタンスに変更することで、
     /// 時間に依存するロジックをテスト可能にします。
     /// </summary>
-    internal sealed class Timeline : ITimeline
+    public sealed class Timeline : ITimeline
     {
-        internal event EventHandler<ChangingNowEventArgs> ChangingNow;
+        internal event EventHandler ChangingNow;
+        internal event EventHandler<ChangedNowEventArgs> ChangedNow;
 
-        internal readonly Stack<ExecutionContext> contextStack = new Stack<ExecutionContext>();
+        readonly Stack<ExecutionContext> contextStack = new Stack<ExecutionContext>();
 
-        // 既に実行されたものを再度実行しないようにするために、scheduledTasksとして保持しておく
-        readonly ISet<ScheduledTask> scheduledTasks = new HashSet<ScheduledTask>();
+        // 既に実行されたものを再度実行しないようにするために、schedulesとして保持しておく
+        readonly ISet<ScheduledExecution> schedules = new HashSet<ScheduledExecution>();
 
-        internal void Schedule(ScheduledTask scheduled)
+        internal void Schedule(ScheduledExecution scheduled)
         {
-            // Scheduleがリクエストされても、既にscheduledTasksに同じスケジュールがある場合は実行しない
-            if (scheduled.Task.action.Method.ToString() == "Void RaiseTick()" && this.scheduledTasks.Contains(scheduled))
+            // Scheduleがリクエストされても、既にschedulesに同じスケジュールがある場合は実行しない
+            if (this.schedules.Contains(scheduled))
                 return;
 
-            this.scheduledTasks.Add(scheduled);
+            this.schedules.Add(scheduled);
             using (var scope = CreateNewExecutionContext(scheduled.Origin))
-                scheduled.Task.Execute();
+                scheduled.Execution.Execute();
         }
 
         /// <summary>
@@ -154,25 +151,26 @@ namespace TimeExt.VirtualImplementations
 
         internal long GetCurrentRemainedTicks(Timer timer)
         {
-            var context = this.contextStack.Peek();
-            if (this.remainedTicksDict.ContainsKey(Tuple.Create(timer, context)) == false)
+            var timeline = this.contextStack.Peek();
+            if (this.remainedTicksDict.ContainsKey(Tuple.Create(timer, timeline)) == false)
                 return 0;
-            return this.remainedTicksDict[Tuple.Create(timer, context)];
+            return this.remainedTicksDict[Tuple.Create(timer, timeline)];
         }
 
         internal void SetCurrentRemainedTicks(Timer timer, long newValue)
         {
-            var context = this.contextStack.Peek();
-            this.remainedTicksDict[Tuple.Create(timer, context)] = newValue;
+            var timeline = this.contextStack.Peek();
+            this.remainedTicksDict[Tuple.Create(timer, timeline)] = newValue;
         }
 
         public void WaitForTime(TimeSpan span)
         {
-            EventHelper.Raise(this.ChangingNow, this, new ChangingNowEventArgs(span));
+            EventHelper.Raise(this.ChangingNow, this, EventArgs.Empty);
             // 現在時刻を指定時間分進めます。
             // その過程で、タイマーと連動(ChangedNowにタイマーのOnChangedNowが登録される)して、
             // 指定周期が満たされた分だけタイマーのTickイベントを発火します。
             contextStack.Peek().WaitForTime(span);
+            EventHelper.Raise(this.ChangedNow, this, new ChangedNowEventArgs(span));
         }
 
         internal void SetContextIfNeed(DateTime origin)
@@ -189,9 +187,7 @@ namespace TimeExt.VirtualImplementations
 
         public ITask CreateTask(Action action)
         {
-            var task = new Task(this, action);
-            this.Schedule(new ScheduledTask(task, this.UtcNow));
-            return task;
+            return new Task(this, this.contextStack.Peek(), UtcNow, action);
         }
 
         public ITimer CreateTimer(TimeSpan interval, InitialTick initialTick = InitialTick.Disabled)
@@ -205,10 +201,20 @@ namespace TimeExt.VirtualImplementations
             return new Stopwatch(() => UtcNow - origin);
         }
 
-	// このメソッドは、テスト以外では使われない。プロダクトコードでは、代わりにITask.Abortを使うこと。
-        internal void Abort()
+        public Action CreateWaiter(params TimeSpan[] timeSpans)
         {
-            this.contextStack.Peek().Abort();
+            int i = 0;
+            return () =>
+            {
+                if (timeSpans.Length <= i) throw new InvalidOperationException("予期せぬwait");
+
+                WaitForTime(timeSpans[i++]);
+            };
+        }
+
+        public Action CreateWaiter(Func<double, TimeSpan> f, params double[] timeSpanValues)
+        {
+            return this.CreateWaiter(timeSpanValues.Select(f).ToArray());
         }
     }
 }

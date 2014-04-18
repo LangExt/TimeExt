@@ -5,7 +5,7 @@ using System.Text;
 
 namespace TimeExt.RealImplementations
 {
-    internal sealed class Timer : ITimer
+    public sealed class Timer : ITimer
     {
         public event EventHandler Tick;
 

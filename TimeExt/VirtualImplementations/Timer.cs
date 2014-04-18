@@ -5,7 +5,7 @@ using System.Text;
 
 namespace TimeExt.VirtualImplementations
 {
-    internal sealed class Timer : ITimer
+    internal sealed class Timer : ITimer, IExecution
     {
         EventHandler tickHandler;
         public event EventHandler Tick
@@ -33,52 +33,42 @@ namespace TimeExt.VirtualImplementations
             this.initialTick = initialTick;
 
             timeline.ChangingNow += this.OnChangingNow;
+            timeline.ChangedNow += this.OnChangedNow;
         }
 
-        private void OnChangingNow(object sender, ChangingNowEventArgs e)
+        private void OnChangingNow(object sender, EventArgs e)
+        {
+            if (this.initialTick == InitialTick.Enabled && this.isCalledWaitForTime == false)
+            {
+                this.isCalledWaitForTime = true;
+                this.timeline.Schedule(new ScheduledExecution(this, this.timeline.UtcNow));
+            }
+        }
+
+        // タイムラインの現在時刻が変更された場合に呼び出されるメソッド。
+        // この中で必要に応じてTickイベントを発火する。
+        private void OnChangedNow(object sender, ChangedNowEventArgs e)
         {
             var oldRemainedTicks = this.timeline.GetCurrentRemainedTicks(this);
-            this.e[Tuple.Create(timeline.UtcNow, this)] = e;
-            this.oldRemainedTicks[Tuple.Create(timeline.UtcNow, this)] = oldRemainedTicks;
-            timeline.CreateTask(DoTicks);
+            var totalTicksCount = (e.Delta.Ticks + oldRemainedTicks) / this.interval.Ticks;
             var remainedTicks = (e.Delta.Ticks + oldRemainedTicks) % this.interval.Ticks;
             this.timeline.SetCurrentRemainedTicks(this, remainedTicks);
-        }
-
-        Dictionary<Tuple<DateTime, Timer>, ChangingNowEventArgs> e = new Dictionary<Tuple<DateTime, Timer>, ChangingNowEventArgs>();
-        Dictionary<Tuple<DateTime, Timer>, long> oldRemainedTicks = new Dictionary<Tuple<DateTime, Timer>, long>();
-
-        internal void DoTicks()
-        {
-            var e = this.e[Tuple.Create(timeline.UtcNow, this)];
-            var oldRemainedTicks = this.oldRemainedTicks[Tuple.Create(timeline.UtcNow, this)];
-
-
-            if (this.initialTick == InitialTick.Enabled && !isCalledWaitForTime)
-            {
-                this.isCalledWaitForTime = true; // 別のコンテキストから再度initialTickが呼ばれないようにするフラグを立てる
-                timeline.CreateTask(RaiseTick);
-            }
-
-            var totalTicksCount = (e.Delta.Ticks + oldRemainedTicks) / this.interval.Ticks;
-
             // 最大totalTicsCount回のTickイベントを発火する。
             for (int i = 0; i < totalTicksCount; i++)
             {
-                var tickWait = TimeSpan.FromTicks(this.interval.Ticks);
-                timeline.contextStack.Peek().WaitForTime(tickWait);
-                timeline.CreateTask(RaiseTick);
+                var now = this.timeline.UtcNow - e.Delta + (TimeSpan.FromTicks(this.interval.Ticks * (i + 1) - oldRemainedTicks));
+                this.timeline.Schedule(new ScheduledExecution(this, now));
             }
-        }
-
-        void RaiseTick()
-        {
-            EventHelper.Raise(this.tickHandler, this, EventArgs.Empty);
         }
 
         public void Dispose()
         {
             // for the real world.
+        }
+
+        public void Execute()
+        {
+            EventHelper.Raise(this.tickHandler, this, EventArgs.Empty);
         }
     }
 }

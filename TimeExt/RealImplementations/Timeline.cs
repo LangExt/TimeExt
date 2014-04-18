@@ -6,7 +6,7 @@ using System.Threading;
 
 namespace TimeExt.RealImplementations
 {
-    internal sealed class Timeline : ITimeline
+    public sealed class Timeline : ITimeline
     {
         public DateTime UtcNow
         {
