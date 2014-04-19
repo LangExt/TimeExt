@@ -28,12 +28,12 @@ namespace TimeExt.Tests.VirtualImplementations
             var timerA = tl.CreateTimer(TimeSpan.FromSeconds(5));
             var waitA = tl.CreateWaiter(TimeSpan.FromSeconds, 2, 2, 2, 2, 2);
             var countA = 0;
-            timerA.Tick += (sender, arg) => { countA++; waitA(); };
+            timerA.Tick += (sender, arg) => { var now = tl.UtcNow; countA++; waitA(); };
 
             var timerB = tl.CreateTimer(TimeSpan.FromSeconds(8));
             var waitB = tl.CreateWaiter(TimeSpan.FromSeconds, 3, 3, 3);
             var countB = 0;
-            timerB.Tick += (sender, arg) => { countB++; waitB(); };
+            timerB.Tick += (sender, arg) => { var now = tl.UtcNow; countB++; waitB(); };
 
             tl.WaitForTime(TimeSpan.FromSeconds(29));
 
@@ -95,7 +95,7 @@ namespace TimeExt.Tests.VirtualImplementations
             Assert.That(countB, Is.EqualTo(1));
             Assert.That(tl.UtcNow, Is.EqualTo(origin + TimeSpan.FromSeconds(3)));
         }
-        
+
         [Test]
         public void タスクの中で例外を投げてもJoinを呼び出すまでは無視される()
         {
@@ -141,7 +141,7 @@ namespace TimeExt.Tests.VirtualImplementations
 
             Assert.That(count, Is.EqualTo(1));
         }
-        
+
         [Test]
         public void 内部で待つタスクとタイマーを同時に扱える()
         {
@@ -152,7 +152,7 @@ namespace TimeExt.Tests.VirtualImplementations
 
             var countB = 0;
             var timer = tl.CreateTimer(TimeSpan.FromSeconds(3), InitialTick.Enabled);
-            timer.Tick += delegate { countB++;  };
+            timer.Tick += delegate { countB++; };
 
             tl.WaitForTime(TimeSpan.FromSeconds(1));
 
@@ -171,7 +171,7 @@ namespace TimeExt.Tests.VirtualImplementations
 
             var countB = 0;
             var timer = tl.CreateTimer(TimeSpan.FromSeconds(3), InitialTick.Enabled);
-            timer.Tick += delegate { countB++;  tl.WaitForTime(TimeSpan.FromSeconds(1)); };
+            timer.Tick += delegate { countB++; tl.WaitForTime(TimeSpan.FromSeconds(1)); };
 
             tl.WaitForTime(TimeSpan.FromSeconds(10));
 
@@ -203,7 +203,7 @@ namespace TimeExt.Tests.VirtualImplementations
             var taskC = tl.CreateTask(() => { tl.WaitForTime(TimeSpan.FromSeconds(5)); });
             tl.WaitForTime(TimeSpan.FromSeconds(1));
 
-            factory.CreateTaskJoin().JoinAll(new []{ taskA, taskB, taskC });
+            factory.CreateTaskJoin().JoinAll(new[] { taskA, taskB, taskC });
 
             Assert.That(tl.UtcNow, Is.EqualTo(origin + TimeSpan.FromSeconds(20)));
         }
@@ -246,7 +246,8 @@ namespace TimeExt.Tests.VirtualImplementations
         public void タスクをアボートするとそれ以降の待ち処理は実行されない()
         {
             var tl = new Timeline(origin);
-            var task = tl.CreateTask(() => { 
+            var task = tl.CreateTask(() =>
+            {
                 tl.Abort();
                 tl.WaitForTime(TimeSpan.FromSeconds(60));
             });
@@ -260,7 +261,8 @@ namespace TimeExt.Tests.VirtualImplementations
         public void タスクをアボートしてもそれ以前の待ち処理は実行される()
         {
             var tl = new Timeline(origin);
-            var task = tl.CreateTask(() => { 
+            var task = tl.CreateTask(() =>
+            {
                 tl.WaitForTime(TimeSpan.FromSeconds(60));
                 tl.Abort();
             });
@@ -293,7 +295,8 @@ namespace TimeExt.Tests.VirtualImplementations
                 var timer = tl.CreateTimer(TimeSpan.FromSeconds(3));
                 var wait = tl.CreateWaiter(TimeSpan.FromSeconds(9), TimeSpan.FromSeconds(1), TimeSpan.FromSeconds(1), TimeSpan.FromSeconds(1), TimeSpan.FromTicks(1));
                 var count = 0;
-                timer.Tick += (sender, args) => { ++count; wait(); };
+                var history = new List<DateTime>();
+                timer.Tick += (sender, args) => { var now = tl.UtcNow; history.Add(now); ++count; wait(); };
                 tl.WaitForTime(TimeSpan.FromSeconds(3));
 
                 Assert.That(count, Is.EqualTo(4));

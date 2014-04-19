@@ -42,8 +42,11 @@ namespace TimeExt.VirtualImplementations
         {
             if (this.initialTick == InitialTick.Enabled && this.isCalledWaitForTime == false)
             {
-                this.isCalledWaitForTime = true;
-                this.timeline.Schedule(new ScheduledExecution(this, this.timeline.UtcNow));
+                using (var changedNowCtx = this.timeline.CreateNewExecutionContext(this.timeline.UtcNow))
+                {
+                    this.isCalledWaitForTime = true;
+                    this.timeline.Schedule(new ScheduledExecution(this, this.timeline.UtcNow));
+                }
             }
         }
 
@@ -51,17 +54,25 @@ namespace TimeExt.VirtualImplementations
         // この中で必要に応じてTickイベントを発火する。
         private void OnChangedNow(object sender, ChangedNowEventArgs e)
         {
-            var oldRemainedTicks = 0;// this.timeline.GetCurrentRemainedTicks(this, context);
-
+            var oldRemainedTicks = this.timeline.GetCurrentRemainedTicks(this, this.context); // remain
             var totalTicksCount = (e.Delta.Ticks + oldRemainedTicks) / this.interval.Ticks;
             var remainedTicks = (e.Delta.Ticks + oldRemainedTicks) % this.interval.Ticks;
-            this.timeline.SetCurrentRemainedTicks(this, context, remainedTicks);
-            // 最大totalTicsCount回のTickイベントを発火する。
-            for (int i = 0; i < totalTicksCount; i++)
+            if (this.timeline.UtcNow != this.context.UtcNow && remainedTicks == 0) ++totalTicksCount;
+
+            using (var changedNowCtx = this.timeline.CreateNewExecutionContext(this.timeline.UtcNow))
             {
-                var now = this.context.UtcNow + (TimeSpan.FromTicks(this.interval.Ticks * (i + 1) - oldRemainedTicks));
-                this.timeline.Schedule(new ScheduledExecution(this, now));
+
+                // 最大totalTicsCount回のTickイベントを発火する。
+                for (int i = 0; i < totalTicksCount; i++)
+                {
+                    var origin = this.context.UtcNow + TimeSpan.FromTicks(this.interval.Ticks * (i + 1));
+                    using (var newContext = this.timeline.CreateNewExecutionContext(origin))
+                    {
+                        this.timeline.Schedule(new ScheduledExecution(this, this.timeline.UtcNow));
+                    }
+                }
             }
+            this.timeline.SetCurrentRemainedTicks(this, this.context, remainedTicks);
         }
 
         public void Dispose()

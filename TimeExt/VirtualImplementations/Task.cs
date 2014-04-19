@@ -35,7 +35,11 @@ namespace TimeExt.VirtualImplementations
         {
             try
             {
-                action();
+                using (var newContext = this.timeline.CreateNewExecutionContext(origin))
+                {
+                    action();
+                    this.end = this.timeline.UtcNow;
+                }
             }
             catch (System.Threading.ThreadAbortException)
             {
@@ -48,7 +52,7 @@ namespace TimeExt.VirtualImplementations
             }
             finally
             {
-                this.end = this.timeline.UtcNow;
+               // this.end = this.timeline.UtcNow; // 異常終了したときこれでいいのか・・・？
             }
         }
 

@@ -34,7 +34,7 @@ namespace TimeExt.VirtualImplementations
         internal void SetNewOrigin(DateTime newOrigin)
         {
             var diff = newOrigin - this.UtcNow;
-            if(0 < diff.Ticks)
+            if (0 < diff.Ticks)
                 this.passed += diff;
         }
 
@@ -132,7 +132,7 @@ namespace TimeExt.VirtualImplementations
                 return;
 
             this.schedules.Add(scheduled);
-            using (var scope = CreateNewExecutionContext(scheduled.Origin))
+            //using (var scope = CreateNewExecutionContext(scheduled.Origin))
                 scheduled.Execution.Execute();
         }
 
@@ -155,19 +155,24 @@ namespace TimeExt.VirtualImplementations
             return new ExecutionContextScope(this.contextStack, origin);
         }
 
-        readonly IDictionary<Tuple<Timer, ExecutionContext>, long> remainedTicksDict =
+        readonly Dictionary<Tuple<Timer, ExecutionContext>, long> remainedTicksDict =
             new Dictionary<Tuple<Timer, ExecutionContext>, long>();
 
-        internal long GetCurrentRemainedTicks(Timer timer, ExecutionContext context)
+        internal long GetCurrentRemainedTicks(Timer timer, ExecutionContext ctx)
         {
-            if (this.remainedTicksDict.ContainsKey(Tuple.Create(timer, context)) == false)
+            if (this.remainedTicksDict.ContainsKey(Tuple.Create(timer, ctx)) == false)
                 return 0;
-            return this.remainedTicksDict[Tuple.Create(timer, context)];
+            return this.remainedTicksDict[Tuple.Create(timer, ctx)];
         }
 
-        internal void SetCurrentRemainedTicks(Timer timer, ExecutionContext context, long newValue)
+        internal void SetCurrentRemainedTicks(Timer timer, ExecutionContext ctx, long newValue)
         {
-            this.remainedTicksDict[Tuple.Create(timer, context)] = newValue;
+            this.remainedTicksDict[Tuple.Create(timer, ctx)] = newValue;
+        }
+
+        public void WaitForTime2(TimeSpan span)
+        {
+	    contextStack.Peek().WaitForTime(span);
         }
 
         public void WaitForTime(TimeSpan span)
@@ -211,7 +216,7 @@ namespace TimeExt.VirtualImplementations
             return new Stopwatch(() => UtcNow - origin);
         }
 
-	// このメソッドは、テスト以外では使われない。プロダクトコードでは、代わりにITask.Abortを使うこと。
+        // このメソッドは、テスト以外では使われない。プロダクトコードでは、代わりにITask.Abortを使うこと。
         internal void Abort()
         {
             this.contextStack.Peek().Abort();
