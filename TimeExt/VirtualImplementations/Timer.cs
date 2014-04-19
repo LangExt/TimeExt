@@ -54,7 +54,7 @@ namespace TimeExt.VirtualImplementations
         // この中で必要に応じてTickイベントを発火する。
         private void OnChangedNow(object sender, ChangedNowEventArgs e)
         {
-            var oldRemainedTicks = this.timeline.GetCurrentRemainedTicks(this, this.context); // remain
+            var oldRemainedTicks = this.timeline.GetCurrentRemainedTicks(this); // remain
             var totalTicksCount = (e.Delta.Ticks + oldRemainedTicks) / this.interval.Ticks;
             var remainedTicks = (e.Delta.Ticks + oldRemainedTicks) % this.interval.Ticks;
             if (this.timeline.UtcNow != this.context.UtcNow && remainedTicks == 0) ++totalTicksCount;
@@ -68,11 +68,13 @@ namespace TimeExt.VirtualImplementations
                     var origin = this.context.UtcNow + TimeSpan.FromTicks(this.interval.Ticks * (i + 1));
                     using (var newContext = this.timeline.CreateNewExecutionContext(origin))
                     {
-                        this.timeline.Schedule(new ScheduledExecution(this, this.timeline.UtcNow));
+                        var result = this.timeline.Schedule(new ScheduledExecution(this, this.timeline.UtcNow));
+                        if (result == false) // すでに同スケジュールが実行されていてすでに残り時間は保存されてる
+                            remainedTicks -= this.interval.Ticks;
                     }
                 }
             }
-            this.timeline.SetCurrentRemainedTicks(this, this.context, remainedTicks);
+            this.timeline.SetCurrentRemainedTicks(this, remainedTicks);
         }
 
         public void Dispose()
