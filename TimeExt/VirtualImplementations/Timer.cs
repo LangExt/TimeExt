@@ -47,6 +47,8 @@ namespace TimeExt.VirtualImplementations
                     this.isCalledWaitForTime = true;
                     this.timeline.Schedule(new ScheduledExecution(this, this.timeline.UtcNow));
                 }
+
+                this.timeline.ClearRemainedTicks();
             }
         }
 
@@ -61,7 +63,6 @@ namespace TimeExt.VirtualImplementations
 
             using (var changedNowCtx = this.timeline.CreateNewExecutionContext(this.timeline.UtcNow))
             {
-
                 // 最大totalTicsCount回のTickイベントを発火する。
                 for (int i = 0; i < totalTicksCount; i++)
                 {

@@ -157,8 +157,11 @@ namespace TimeExt.VirtualImplementations
 
         readonly Dictionary<Timer, long> remainedTicksDict =
             new Dictionary<Timer, long>();
-        //readonly Dictionary<Tuple<Timer, ExecutionContext>, long> remainedTicksDict =
-        //    new Dictionary<Tuple<Timer, ExecutionContext>, long>();
+
+        internal void ClearRemainedTicks()
+        {
+            remainedTicksDict.Clear();
+        }
 
         internal long GetCurrentRemainedTicks(Timer timer)
         {
@@ -171,18 +174,6 @@ namespace TimeExt.VirtualImplementations
         {
             this.remainedTicksDict[timer] = newValue;
         }
-
-        //internal long GetCurrentRemainedTicks(Timer timer, ExecutionContext ctx)
-        //{
-        //    if (this.remainedTicksDict.ContainsKey(Tuple.Create(timer, ctx)) == false)
-        //        return 0;
-        //    return this.remainedTicksDict[Tuple.Create(timer, ctx)];
-        //}
-
-        //internal void SetCurrentRemainedTicks(Timer timer, ExecutionContext ctx, long newValue)
-        //{
-        //    this.remainedTicksDict[Tuple.Create(timer, ctx)] = newValue;
-        //}
 
         public void WaitForTime2(TimeSpan span)
         {
