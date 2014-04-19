@@ -75,6 +75,7 @@ namespace TimeExt.VirtualImplementations
                     }
                 }
             }
+            this.timeline.ClearRemainedTicks();
             this.timeline.SetCurrentRemainedTicks(this, remainedTicks);
         }
 
