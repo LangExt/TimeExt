@@ -35,7 +35,7 @@ namespace TimeExt.VirtualImplementations
             this.context = context;
 
             timeline.ChangingNow += this.OnChangingNow;
-            timeline.ChangedNow += this.OnChangedNow;
+            timeline.ChangingNow2 += this.OnChangingNow2;
         }
 
         private void OnChangingNow(object sender, EventArgs e)
@@ -52,9 +52,7 @@ namespace TimeExt.VirtualImplementations
             }
         }
 
-        // タイムラインの現在時刻が変更された場合に呼び出されるメソッド。
-        // この中で必要に応じてTickイベントを発火する。
-        private void OnChangedNow(object sender, ChangedNowEventArgs e)
+        private void OnChangingNow2(object sender, ChangingNow2EventArgs e)
         {
             var oldRemainedTicks = this.timeline.GetCurrentRemainedTicks(this); // remain
             var totalTicksCount = (e.Delta.Ticks + oldRemainedTicks) / this.interval.Ticks;
@@ -69,8 +67,8 @@ namespace TimeExt.VirtualImplementations
                     var origin = this.context.UtcNow + TimeSpan.FromTicks(this.interval.Ticks * (i + 1));
                     using (var newContext = this.timeline.CreateNewExecutionContext(origin))
                     {
-                        var result = this.timeline.ExecuteScheduleIfNeed(new ScheduledExecution(this, this.timeline.UtcNow));
-                        if (result == false) // すでに同スケジュールが実行されていてすでに残り時間は保存されてる
+                        // すでに同スケジュールが実行されていてすでに残り時間は保存されてる
+                        if (this.timeline.ExecuteScheduleIfNeed(new ScheduledExecution(this, this.timeline.UtcNow)) == false)
                             remainedTicks -= this.interval.Ticks;
                     }
                 }

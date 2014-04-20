@@ -44,11 +44,11 @@ namespace TimeExt.VirtualImplementations
         }
     }
 
-    internal sealed class ChangedNowEventArgs : EventArgs
+    internal sealed class ChangingNow2EventArgs : EventArgs
     {
         internal readonly TimeSpan Delta;
 
-        internal ChangedNowEventArgs(TimeSpan delta)
+        internal ChangingNow2EventArgs(TimeSpan delta)
         {
             this.Delta = delta;
         }
@@ -118,7 +118,7 @@ namespace TimeExt.VirtualImplementations
     internal sealed class Timeline : ITimeline
     {
         internal event EventHandler ChangingNow;
-        internal event EventHandler<ChangedNowEventArgs> ChangedNow;
+        internal event EventHandler<ChangingNow2EventArgs> ChangingNow2;
 
         readonly Stack<ExecutionContext> contextStack = new Stack<ExecutionContext>();
 
@@ -186,18 +186,21 @@ namespace TimeExt.VirtualImplementations
 
         public void WaitForTime(TimeSpan span)
         {
+            // イベントに複数のハンドラが登録されていた場合、
+            //   Handler1.ChangingNow -> Handler2.ChangingNow -> Handler1.ChangingNow2 -> Handler2.ChangingNow2
+            // のような順番で呼び出されて欲しいので、下のコードは単純には直列化(1つのChangingNowに統合)できない。
+            // 統合してしまうと、
+            //   Hander1.ChangingNow -> Hander1.ChangingNow2 -> Handler2.ChangingNow -> Handler2.ChangingNow2
+            // という意味になってしまう。
             EventHelper.Raise(this.ChangingNow, this, EventArgs.Empty);
-            EventHelper.Raise(this.ChangedNow, this, new ChangedNowEventArgs(span));
-            // 現在時刻を指定時間分進めます。
-            // その過程で、タイマーと連動(ChangedNowにタイマーのOnChangedNowが登録される)して、
-            // 指定周期が満たされた分だけタイマーのTickイベントを発火します。
+            EventHelper.Raise(this.ChangingNow2, this, new ChangingNow2EventArgs(span));
             contextStack.Peek().WaitForTime(span);
         }
 
         internal void SetContextIfNeed(DateTime origin)
         {
             // 現在時刻が進む可能性があるが、既に進められた時刻に追いつこうとしているだけなので、
-            // ここでChangingNowやChangedNowを呼び出す必要はない(呼び出してもいいが、なにも起こらない)
+            // ここでChangingNowやChangingNow2を呼び出す必要はない(呼び出してもいいが、なにも起こらない)
             contextStack.Peek().SetNewOrigin(origin);
         }
 
