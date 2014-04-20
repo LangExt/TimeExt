@@ -77,5 +77,11 @@ namespace TimeExt.VirtualImplementations
         {
             EventHelper.Raise(this.tickHandler, this, EventArgs.Empty);
         }
+
+
+        public void Start()
+        {
+            // TODO: 本当はここ呼ばれて初めてイベントハンドラをAddすべき。
+        }
     }
 }

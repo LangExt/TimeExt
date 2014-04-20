@@ -62,6 +62,8 @@ namespace TimeExt
         /// タイマーに設定した刻み毎に呼び出されるイベントです。
         /// </summary>
         event EventHandler Tick;
+
+        void Start();
     }
 
     /// <summary>

@@ -9,10 +9,21 @@ namespace TimeExt.RealImplementations
     {
         public event EventHandler Tick;
 
-        readonly System.Threading.Timer timer;
+        System.Threading.Timer timer;
+        readonly TimeSpan interval;
+        readonly InitialTick initialTick;
 
         internal Timer(TimeSpan interval, InitialTick initialTick) 
         {
+            this.interval = interval;
+            this.initialTick = initialTick;
+        }
+
+        public void Start()
+        {
+            if (this.timer != null)
+                throw new InvalidOperationException("このタイマーはすでに開始しています。");
+
             var dueTime = initialTick == InitialTick.Enabled ? TimeSpan.Zero : interval;
             this.timer =
                 new System.Threading.Timer(_ =>
@@ -21,7 +32,8 @@ namespace TimeExt.RealImplementations
 
         public void Dispose()
         {
-            this.timer.Dispose();
+            if (this.timer != null)
+                this.timer.Dispose();
         }
     }
 }
