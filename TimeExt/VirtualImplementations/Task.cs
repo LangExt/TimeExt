@@ -33,26 +33,25 @@ namespace TimeExt.VirtualImplementations
 
         public void Execute()
         {
-            try
+            using (var newContext = this.timeline.CreateNewExecutionContext(origin))
             {
-                using (var newContext = this.timeline.CreateNewExecutionContext(origin))
+                try
                 {
                     action();
-                    this.end = this.timeline.UtcNow;
                 }
-            }
-            catch (System.Threading.ThreadAbortException)
-            {
-                // ThreadAbortExceptionは無視する
-                throw;
-            }
-            catch (Exception e)
-            {
-                this.exceptions.Add(e);
-            }
-            finally
-            {
-               // this.end = this.timeline.UtcNow; // 異常終了したときこれでいいのか・・・？
+                catch (System.Threading.ThreadAbortException)
+                {
+                    // ThreadAbortExceptionは無視する
+                    throw;
+                }
+                catch (Exception e)
+                {
+                    this.exceptions.Add(e);
+                }
+                finally
+                {
+                    this.end = this.timeline.UtcNow; // 異常終了したときこれでいいのか・・・？
+                }
             }
         }
 
