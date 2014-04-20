@@ -118,11 +118,10 @@ namespace TimeExt
 
         /// <summary>
         /// 間隔を指定してタイマーを生成します。
-        /// 生成したタイマーは、すでに起動していることに注意してください。
-        /// initialTickにEnabledを指定しない場合、最初のTickはinterval経過した後で初めて発火します(タイマーを生成した時点ではTickしない)。
+        /// initialTickにEnabledを指定しない場合、最初のTickはinterval経過した後で初めて発火します(タイマーを開始した時点ではTickしない)。
         /// </summary>
         /// <param name="interval">タイマーのTickイベントを発火する間隔</param>
-        /// <param name="initialTick">生成直後にTickイベントを発火するかどうか</param>
+        /// <param name="initialTick">開始直後にTickイベントを発火するかどうか</param>
         ITimer CreateTimer(TimeSpan interval, InitialTick initialTick = InitialTick.Disabled);
     }
 }

@@ -26,11 +26,13 @@ namespace TimeExt.Tests.VirtualImplementations
             var tl = new Timeline(origin);
 
             var timerA = tl.CreateTimer(TimeSpan.FromSeconds(5));
+            timerA.Start();
             var waitA = tl.CreateWaiter(TimeSpan.FromSeconds, 2, 2, 2, 2, 2);
             var countA = 0;
             timerA.Tick += (sender, arg) => { var now = tl.UtcNow; countA++; waitA(); };
 
             var timerB = tl.CreateTimer(TimeSpan.FromSeconds(8));
+            timerB.Start();
             var waitB = tl.CreateWaiter(TimeSpan.FromSeconds, 3, 3, 3);
             var countB = 0;
             timerB.Tick += (sender, arg) => { var now = tl.UtcNow; countB++; waitB(); };
@@ -48,11 +50,13 @@ namespace TimeExt.Tests.VirtualImplementations
             var tl = new Timeline(origin);
 
             var timerA = tl.CreateTimer(TimeSpan.FromSeconds(5));
+            timerA.Start();
             var waitA = tl.CreateWaiter(TimeSpan.FromSeconds, 10, 2, 2, 2, 2);
             var historyA = new List<DateTime>();
             timerA.Tick += (sender, arg) => { historyA.Add(tl.UtcNow); waitA(); };
 
             var timerB = tl.CreateTimer(TimeSpan.FromSeconds(5));
+            timerB.Start();
             var waitB = tl.CreateWaiter(TimeSpan.FromSeconds, 2, 2, 2, 2, 2);
             var historyB = new List<DateTime>();
             timerB.Tick += (sender, arg) => { historyB.Add(tl.UtcNow); waitB(); };
@@ -73,11 +77,13 @@ namespace TimeExt.Tests.VirtualImplementations
             var tl = new Timeline(origin);
 
             var timerA = tl.CreateTimer(TimeSpan.FromSeconds(5), InitialTick.Enabled);
+            timerA.Start();
             var waitA = tl.CreateWaiter(TimeSpan.FromSeconds, 10, 2, 2, 2, 2, 2);
             var historyA = new List<DateTime>();
             timerA.Tick += (sender, arg) => { historyA.Add(tl.UtcNow); waitA(); };
 
             var timerB = tl.CreateTimer(TimeSpan.FromSeconds(5), InitialTick.Enabled);
+            timerB.Start();
             var waitB = tl.CreateWaiter(TimeSpan.FromSeconds, 2, 2, 2, 2, 2, 2);
             var historyB = new List<DateTime>();
             timerB.Tick += (sender, arg) => { historyB.Add(tl.UtcNow); waitB(); };
@@ -96,11 +102,13 @@ namespace TimeExt.Tests.VirtualImplementations
             var tl = new Timeline(origin);
 
             var timerA = tl.CreateTimer(TimeSpan.FromSeconds(5), InitialTick.Enabled);
+            timerA.Start();
             var waitA = tl.CreateWaiter(TimeSpan.FromSeconds, 10, 2, 2, 2, 2, 2);
             var historyA = new List<DateTime>();
             timerA.Tick += (sender, arg) => { historyA.Add(tl.UtcNow); waitA(); };
 
             var timerB = tl.CreateTimer(TimeSpan.FromSeconds(5), InitialTick.Enabled);
+            timerB.Start();
             var waitB = tl.CreateWaiter(TimeSpan.FromSeconds, 2, 2, 2, 2, 2, 2);
             var historyB = new List<DateTime>();
             timerB.Tick += (sender, arg) => { historyB.Add(tl.UtcNow); waitB(); };
@@ -120,11 +128,13 @@ namespace TimeExt.Tests.VirtualImplementations
             var tl = new Timeline(origin);
 
             var timerA = tl.CreateTimer(TimeSpan.FromSeconds(5), InitialTick.Enabled);
+            timerA.Start();
             var waitA = tl.CreateWaiter(TimeSpan.FromSeconds, 2, 2, 2, 2, 2, 2);
             var historyA = new List<DateTime>();
             timerA.Tick += (sender, arg) => { historyA.Add(tl.UtcNow); waitA(); };
 
             var timerB = tl.CreateTimer(TimeSpan.FromSeconds(5), InitialTick.Enabled);
+            timerB.Start();
             var waitB = tl.CreateWaiter(TimeSpan.FromSeconds, 2, 2, 2, 2, 2, 2);
             var historyB = new List<DateTime>();
             timerB.Tick += (sender, arg) => { historyB.Add(tl.UtcNow); waitB(); };
@@ -225,6 +235,7 @@ namespace TimeExt.Tests.VirtualImplementations
 
             var countB = 0;
             var timer = tl.CreateTimer(TimeSpan.FromSeconds(3), InitialTick.Enabled);
+            timer.Start();
             timer.Tick += delegate { countB++; };
 
             tl.WaitForTime(TimeSpan.FromSeconds(1));
@@ -244,6 +255,7 @@ namespace TimeExt.Tests.VirtualImplementations
 
             var countB = 0;
             var timer = tl.CreateTimer(TimeSpan.FromSeconds(3), InitialTick.Enabled);
+            timer.Start();
             timer.Tick += delegate { countB++; tl.WaitForTime(TimeSpan.FromSeconds(1)); };
 
             tl.WaitForTime(TimeSpan.FromSeconds(10));
@@ -354,6 +366,7 @@ namespace TimeExt.Tests.VirtualImplementations
             {
                 var tl = new Timeline(this.origin);
                 var timer = tl.CreateTimer(TimeSpan.FromSeconds(3));
+                timer.Start();
                 var isFired = false;
                 timer.Tick += (sender, args) => { isFired = true; };
                 tl.WaitForTime(TimeSpan.FromSeconds(3));
@@ -366,6 +379,7 @@ namespace TimeExt.Tests.VirtualImplementations
             {
                 var tl = new Timeline(this.origin);
                 var timer = tl.CreateTimer(TimeSpan.FromSeconds(3));
+                timer.Start();
                 var wait = tl.CreateWaiter(TimeSpan.FromSeconds(9), TimeSpan.FromSeconds(1), TimeSpan.FromSeconds(1), TimeSpan.FromSeconds(1), TimeSpan.FromTicks(1));
                 var count = 0;
                 var history = new List<DateTime>();
@@ -381,6 +395,7 @@ namespace TimeExt.Tests.VirtualImplementations
             {
                 var tl = new Timeline(this.origin);
                 var timer = tl.CreateTimer(TimeSpan.FromSeconds(3));
+                timer.Start();
                 var wait = tl.CreateWaiter(TimeSpan.FromSeconds(9), TimeSpan.FromSeconds(1), TimeSpan.FromSeconds(1), TimeSpan.FromSeconds(1), TimeSpan.Zero, TimeSpan.Zero, TimeSpan.Zero, TimeSpan.Zero, TimeSpan.Zero);
                 var count = 0;
                 timer.Tick += (sender, args) => { var start = tl.UtcNow; ++count; wait(); var end = tl.UtcNow; Console.WriteLine(); };
@@ -397,6 +412,7 @@ namespace TimeExt.Tests.VirtualImplementations
             {
                 var tl = new Timeline(this.origin);
                 var timer = tl.CreateTimer(TimeSpan.FromSeconds(3));
+                timer.Start();
                 var count = 0;
                 timer.Tick += (sender, args) => { count++; };
                 tl.WaitForTime(TimeSpan.FromSeconds(6));
@@ -409,6 +425,7 @@ namespace TimeExt.Tests.VirtualImplementations
             {
                 var tl = new Timeline(this.origin);
                 var timer = tl.CreateTimer(TimeSpan.FromSeconds(3));
+                timer.Start();
                 var isFired = false;
                 timer.Tick += (sender, args) => { isFired = true; };
                 tl.WaitForTime(TimeSpan.FromSeconds(1));
@@ -424,6 +441,7 @@ namespace TimeExt.Tests.VirtualImplementations
             {
                 var tl = new Timeline(this.origin);
                 var timer = tl.CreateTimer(TimeSpan.FromSeconds(3));
+                timer.Start();
                 var count = 0;
                 timer.Tick += (sender, args) => { count++; };
                 tl.WaitForTime(TimeSpan.FromSeconds(firstSpan));
@@ -475,6 +493,7 @@ namespace TimeExt.Tests.VirtualImplementations
                 var tl = new Timeline(this.origin);
                 tl.WaitForTime(TimeSpan.FromSeconds(n));
                 var timer = tl.CreateTimer(TimeSpan.FromSeconds(specificInterval));
+                timer.Start();
                 var count = 0;
                 timer.Tick += (sender, args) => { count++; };
                 var shouldPassingTime = specificInterval * expected;
@@ -495,6 +514,7 @@ namespace TimeExt.Tests.VirtualImplementations
             {
                 var tl = new Timeline(this.origin);
                 var timer = tl.CreateTimer(TimeSpan.FromSeconds(3), InitialTick.Enabled);
+                timer.Start();
                 var isFired = false;
                 timer.Tick += (sender, args) => { isFired = true; };
                 tl.WaitForTime(TimeSpan.FromSeconds(1));
@@ -507,6 +527,7 @@ namespace TimeExt.Tests.VirtualImplementations
             {
                 var tl = new Timeline(this.origin);
                 var timer = tl.CreateTimer(TimeSpan.FromSeconds(3), InitialTick.Enabled);
+                timer.Start();
                 var wait = tl.CreateWaiter(TimeSpan.FromSeconds(9), TimeSpan.FromSeconds(1), TimeSpan.FromSeconds(1), TimeSpan.FromSeconds(1), TimeSpan.FromTicks(1));
                 var count = 0;
                 timer.Tick += (sender, args) => { ++count; wait(); };
@@ -521,6 +542,7 @@ namespace TimeExt.Tests.VirtualImplementations
             {
                 var tl = new Timeline(this.origin);
                 var timer = tl.CreateTimer(TimeSpan.FromSeconds(3), InitialTick.Enabled);
+                timer.Start();
                 var wait = tl.CreateWaiter(TimeSpan.FromSeconds(9), TimeSpan.FromSeconds(1), TimeSpan.FromSeconds(1), TimeSpan.FromSeconds(1), TimeSpan.Zero, TimeSpan.Zero, TimeSpan.Zero, TimeSpan.Zero, TimeSpan.Zero);
                 var count = 0;
                 timer.Tick += (sender, args) => { var start = tl.UtcNow; ++count; wait(); var end = tl.UtcNow; Console.WriteLine(); };
@@ -537,6 +559,7 @@ namespace TimeExt.Tests.VirtualImplementations
             {
                 var tl = new Timeline(this.origin);
                 var timer = tl.CreateTimer(TimeSpan.FromSeconds(3), InitialTick.Enabled);
+                timer.Start();
                 var count = 0;
                 timer.Tick += (sender, args) => { count++; };
                 tl.WaitForTime(TimeSpan.FromSeconds(6));
@@ -549,6 +572,7 @@ namespace TimeExt.Tests.VirtualImplementations
             {
                 var tl = new Timeline(this.origin);
                 var timer = tl.CreateTimer(TimeSpan.FromSeconds(3), InitialTick.Enabled);
+                timer.Start();
                 var count = 0;
                 timer.Tick += (sender, args) => { count++; };
                 tl.WaitForTime(TimeSpan.FromSeconds(1));
@@ -564,6 +588,7 @@ namespace TimeExt.Tests.VirtualImplementations
             {
                 var tl = new Timeline(this.origin);
                 var timer = tl.CreateTimer(TimeSpan.FromSeconds(3), InitialTick.Enabled);
+                timer.Start();
                 var count = 0;
                 timer.Tick += (sender, args) => { count++; };
                 tl.WaitForTime(TimeSpan.FromSeconds(firstSpan));
@@ -615,6 +640,7 @@ namespace TimeExt.Tests.VirtualImplementations
                 var tl = new Timeline(this.origin);
                 tl.WaitForTime(TimeSpan.FromSeconds(n));
                 var timer = tl.CreateTimer(TimeSpan.FromSeconds(specificInterval), InitialTick.Enabled);
+                timer.Start();
                 var count = 0;
                 timer.Tick += (sender, args) => { count++; };
                 var shouldPassingTime = specificInterval * (expected - 1);

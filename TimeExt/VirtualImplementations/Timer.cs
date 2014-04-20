@@ -33,9 +33,6 @@ namespace TimeExt.VirtualImplementations
             this.interval = interval;
             this.initialTick = initialTick;
             this.context = context;
-
-            timeline.ChangingNow += this.OnChangingNow;
-            timeline.ChangingNow2 += this.OnChangingNow2;
         }
 
         private void OnChangingNow(object sender, EventArgs e)
@@ -81,7 +78,8 @@ namespace TimeExt.VirtualImplementations
 
         public void Start()
         {
-            // TODO: 本当はここ呼ばれて初めてイベントハンドラをAddすべき。
+            timeline.ChangingNow += this.OnChangingNow;
+            timeline.ChangingNow2 += this.OnChangingNow2;
         }
     }
 }
