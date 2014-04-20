@@ -129,15 +129,14 @@ namespace TimeExt.VirtualImplementations
         /// スケジュールされた実行に関する情報を実際に実行するかどうかを判断し、必要があれば実行します。
         /// すでに同じScheduledExecutionが実行されている場合は、実行されずにfalseを返します。
         /// </summary>
-        internal bool ExecuteScheduleIfNeed(ScheduledExecution scheduled)
+        internal void ExecuteScheduleIfNeed(ScheduledExecution scheduled)
         {
             // Scheduleがリクエストされても、既にschedulesに同じスケジュールがある場合は実行しない
             if (this.schedules.Contains(scheduled))
-                return false;
+                return;
 
             this.schedules.Add(scheduled);
             scheduled.Execution.Execute();
-            return true;
         }
 
         /// <summary>
@@ -159,24 +158,35 @@ namespace TimeExt.VirtualImplementations
             return new ExecutionContextScope(this.contextStack, origin);
         }
 
-        readonly Dictionary<Timer, long> remainedTicksDict =
-            new Dictionary<Timer, long>();
+        readonly ISet<Tuple<Timer, ExecutionContext>> isCalledInitialTickDict =
+            new HashSet<Tuple<Timer, ExecutionContext>>();
+        readonly Dictionary<Tuple<Timer, ExecutionContext>, long> remainedTicksDict =
+            new Dictionary<Tuple<Timer, ExecutionContext>, long>();
 
-        internal void ClearRemainedTicks()
+        internal bool GetCurrentIsCalledInitialTick(Timer timer, ExecutionContext context)
         {
-            remainedTicksDict.Clear();
+            if (this.isCalledInitialTickDict.Contains(Tuple.Create(timer, context)) == false)
+                return false;
+            return true;
+        }
+
+        internal void SetCurrentIsCalledInitialTick(Timer timer, ExecutionContext context, bool newValue)
+        {
+            this.isCalledInitialTickDict.Add(Tuple.Create(timer, context));
         }
 
         internal long GetCurrentRemainedTicks(Timer timer)
         {
-            if (this.remainedTicksDict.ContainsKey(timer) == false)
+            var context = this.contextStack.Peek();
+            if (this.remainedTicksDict.ContainsKey(Tuple.Create(timer, context)) == false)
                 return 0;
-            return this.remainedTicksDict[timer];
+            return this.remainedTicksDict[Tuple.Create(timer, context)];
         }
 
         internal void SetCurrentRemainedTicks(Timer timer, long newValue)
         {
-            this.remainedTicksDict[timer] = newValue;
+            var context = this.contextStack.Peek();
+            this.remainedTicksDict[Tuple.Create(timer, context)] = newValue;
         }
 
         public void WaitForTime2(TimeSpan span)

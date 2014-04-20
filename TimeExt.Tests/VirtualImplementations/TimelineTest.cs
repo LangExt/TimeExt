@@ -61,7 +61,9 @@ namespace TimeExt.Tests.VirtualImplementations
 
             var exceptedHistory = Enumerable.Repeat(origin, 5).Select((d, i) => d + TimeSpan.FromSeconds(5 * (i + 1))).ToArray();
             Assert.That(historyA.ToArray(), Is.EqualTo(exceptedHistory));
-            Assert.That(historyB.ToArray(), Is.EqualTo(exceptedHistory));
+            // タイマーAの初回チックで長いWaitがあったとき、タイマーBの未来のチックが呼ばれてしまうので
+            // タイマーBに設定したハンドラの呼び出し順が現実の時間の並びと異なってしまう。
+            Assert.That(historyB.ToArray(), Is.EquivalentTo(exceptedHistory));
             Assert.That(tl.UtcNow, Is.EqualTo(origin + TimeSpan.FromSeconds(29)));
         }
 
@@ -82,7 +84,31 @@ namespace TimeExt.Tests.VirtualImplementations
 
             tl.WaitForTime(TimeSpan.FromSeconds(29));
 
-            var exceptedHistory = Enumerable.Repeat(origin, 6).Select((d, i) => d + TimeSpan.FromSeconds(5 * (i))).ToArray();
+            var exceptedHistory = Enumerable.Repeat(origin, 6).Select((d, i) => d + TimeSpan.FromSeconds(5 * i)).ToArray();
+            Assert.That(historyA.ToArray(), Is.EqualTo(exceptedHistory));
+            Assert.That(historyB.ToArray(), Is.EqualTo(exceptedHistory));
+            Assert.That(tl.UtcNow, Is.EqualTo(origin + TimeSpan.FromSeconds(29)));
+        }
+
+        [Test]
+        public void 初回チックがある複数のタイマーが干渉しない2()
+        {
+            var tl = new Timeline(origin);
+
+            var timerA = tl.CreateTimer(TimeSpan.FromSeconds(5), InitialTick.Enabled);
+            var waitA = tl.CreateWaiter(TimeSpan.FromSeconds, 10, 2, 2, 2, 2, 2);
+            var historyA = new List<DateTime>();
+            timerA.Tick += (sender, arg) => { historyA.Add(tl.UtcNow); waitA(); };
+
+            var timerB = tl.CreateTimer(TimeSpan.FromSeconds(5), InitialTick.Enabled);
+            var waitB = tl.CreateWaiter(TimeSpan.FromSeconds, 2, 2, 2, 2, 2, 2);
+            var historyB = new List<DateTime>();
+            timerB.Tick += (sender, arg) => { historyB.Add(tl.UtcNow); waitB(); };
+
+            tl.WaitForTime(TimeSpan.FromSeconds(9));
+            tl.WaitForTime(TimeSpan.FromSeconds(20));
+
+            var exceptedHistory = Enumerable.Repeat(origin, 6).Select((d, i) => d + TimeSpan.FromSeconds(5 * i)).ToArray();
             Assert.That(historyA.ToArray(), Is.EqualTo(exceptedHistory));
             Assert.That(historyB.ToArray(), Is.EqualTo(exceptedHistory));
             Assert.That(tl.UtcNow, Is.EqualTo(origin + TimeSpan.FromSeconds(29)));

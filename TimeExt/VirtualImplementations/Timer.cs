@@ -40,40 +40,31 @@ namespace TimeExt.VirtualImplementations
 
         private void OnChangingNow(object sender, EventArgs e)
         {
-            if (this.initialTick == InitialTick.Enabled && this.isCalledWaitForTime == false)
+            if (this.initialTick == InitialTick.Enabled && this.timeline.GetCurrentIsCalledInitialTick(this, this.context) == false)
             {
                 using (var changedNowCtx = this.timeline.CreateNewExecutionContext(this.timeline.UtcNow))
                 {
-                    this.isCalledWaitForTime = true;
+                    this.timeline.SetCurrentIsCalledInitialTick(this, this.context, true);
                     this.timeline.ExecuteScheduleIfNeed(new ScheduledExecution(this, this.timeline.UtcNow));
                 }
-
-                this.timeline.ClearRemainedTicks();
             }
         }
 
         private void OnChangingNow2(object sender, ChangingNow2EventArgs e)
         {
-            var oldRemainedTicks = this.timeline.GetCurrentRemainedTicks(this); // remain
+            var oldRemainedTicks = this.timeline.GetCurrentRemainedTicks(this);
             var totalTicksCount = (e.Delta.Ticks + oldRemainedTicks) / this.interval.Ticks;
             var remainedTicks = (e.Delta.Ticks + oldRemainedTicks) % this.interval.Ticks;
-            if (this.timeline.UtcNow != this.context.UtcNow && remainedTicks == 0) ++totalTicksCount;
 
-            using (var changedNowCtx = this.timeline.CreateNewExecutionContext(this.timeline.UtcNow))
+            // 最大totalTicsCount回のTickイベントを発火する。
+            for (int i = 0; i < totalTicksCount; i++)
             {
-                // 最大totalTicsCount回のTickイベントを発火する。
-                for (int i = 0; i < totalTicksCount; i++)
+                var origin = this.timeline.UtcNow + TimeSpan.FromTicks(this.interval.Ticks * (i + 1)) - TimeSpan.FromTicks(oldRemainedTicks);
+                using (var newContext = this.timeline.CreateNewExecutionContext(origin))
                 {
-                    var origin = this.context.UtcNow + TimeSpan.FromTicks(this.interval.Ticks * (i + 1));
-                    using (var newContext = this.timeline.CreateNewExecutionContext(origin))
-                    {
-                        // すでに同スケジュールが実行されていてすでに残り時間は保存されてる
-                        if (this.timeline.ExecuteScheduleIfNeed(new ScheduledExecution(this, this.timeline.UtcNow)) == false)
-                            remainedTicks -= this.interval.Ticks;
-                    }
+                    this.timeline.ExecuteScheduleIfNeed(new ScheduledExecution(this, this.timeline.UtcNow));
                 }
             }
-            this.timeline.ClearRemainedTicks();
             this.timeline.SetCurrentRemainedTicks(this, remainedTicks);
         }
 
