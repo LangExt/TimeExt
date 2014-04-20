@@ -9,7 +9,7 @@ namespace TimeExt.RealImplementations
     internal sealed class Task : ITask
     {
         internal readonly DotNetTasks.Task InternalTask;
-        readonly System.Threading.CancellationTokenSource cancelToken;
+        readonly System.Threading.CancellationTokenSource cancelToken = new System.Threading.CancellationTokenSource();
 
         internal Task(Action action)
         {
