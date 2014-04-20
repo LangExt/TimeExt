@@ -25,7 +25,7 @@ namespace TimeExt.VirtualImplementations
         void OnChangingNow(object sender, EventArgs e)
         {
             if (origin <= currentContext.UtcNow)
-                this.timeline.Schedule(new ScheduledExecution(this, origin));
+                this.timeline.ExecuteScheduleIfNeed(new ScheduledExecution(this, origin));
         }
 
         DateTime end;

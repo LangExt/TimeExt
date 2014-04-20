@@ -20,9 +20,13 @@ namespace TimeExt.VirtualImplementations
             {
                 if (timeSpans.Length <= i)
                 {
+#if DEBUG
                     tl.WaitForTime(TimeSpan.Zero);
                     return;
-                } 
+#else
+                    throw new InvalidOperationException(string.Format("{0}回より多い回数のwaitが発生しました。", timeSpans.Length));
+#endif
+                }
 
                 tl.WaitForTime(timeSpans[i++]);
             };

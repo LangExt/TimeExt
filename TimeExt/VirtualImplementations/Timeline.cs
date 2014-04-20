@@ -78,8 +78,8 @@ namespace TimeExt.VirtualImplementations
     }
 
     /// <summary>
-    /// 実行のスケジュール情報を保持するクラスです。
-    /// 実行のスケジュール情報には、スケジュールされた実行と、
+    /// スケジュールされた実行に関する情報を保持するクラスです。
+    /// スケジュールされた実行に関する情報には、スケジュールされた処理と、
     /// スケジュールされている時刻が含まれます。
     /// </summary>
     internal sealed class ScheduledExecution
@@ -125,7 +125,11 @@ namespace TimeExt.VirtualImplementations
         // 既に実行されたものを再度実行しないようにするために、schedulesとして保持しておく
         readonly ISet<ScheduledExecution> schedules = new HashSet<ScheduledExecution>();
 
-        internal bool Schedule(ScheduledExecution scheduled)
+        /// <summary>
+        /// スケジュールされた実行に関する情報を実際に実行するかどうかを判断し、必要があれば実行します。
+        /// すでに同じScheduledExecutionが実行されている場合は、実行されずにfalseを返します。
+        /// </summary>
+        internal bool ExecuteScheduleIfNeed(ScheduledExecution scheduled)
         {
             // Scheduleがリクエストされても、既にschedulesに同じスケジュールがある場合は実行しない
             if (this.schedules.Contains(scheduled))
@@ -183,11 +187,10 @@ namespace TimeExt.VirtualImplementations
         public void WaitForTime(TimeSpan span)
         {
             EventHelper.Raise(this.ChangingNow, this, EventArgs.Empty);
+            EventHelper.Raise(this.ChangedNow, this, new ChangedNowEventArgs(span));
             // 現在時刻を指定時間分進めます。
             // その過程で、タイマーと連動(ChangedNowにタイマーのOnChangedNowが登録される)して、
             // 指定周期が満たされた分だけタイマーのTickイベントを発火します。
-
-            EventHelper.Raise(this.ChangedNow, this, new ChangedNowEventArgs(span));
             contextStack.Peek().WaitForTime(span);
         }
 

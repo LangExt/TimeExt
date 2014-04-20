@@ -45,7 +45,7 @@ namespace TimeExt.VirtualImplementations
                 using (var changedNowCtx = this.timeline.CreateNewExecutionContext(this.timeline.UtcNow))
                 {
                     this.isCalledWaitForTime = true;
-                    this.timeline.Schedule(new ScheduledExecution(this, this.timeline.UtcNow));
+                    this.timeline.ExecuteScheduleIfNeed(new ScheduledExecution(this, this.timeline.UtcNow));
                 }
 
                 this.timeline.ClearRemainedTicks();
@@ -69,7 +69,7 @@ namespace TimeExt.VirtualImplementations
                     var origin = this.context.UtcNow + TimeSpan.FromTicks(this.interval.Ticks * (i + 1));
                     using (var newContext = this.timeline.CreateNewExecutionContext(origin))
                     {
-                        var result = this.timeline.Schedule(new ScheduledExecution(this, this.timeline.UtcNow));
+                        var result = this.timeline.ExecuteScheduleIfNeed(new ScheduledExecution(this, this.timeline.UtcNow));
                         if (result == false) // すでに同スケジュールが実行されていてすでに残り時間は保存されてる
                             remainedTicks -= this.interval.Ticks;
                     }
