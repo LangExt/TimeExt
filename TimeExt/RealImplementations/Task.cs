@@ -37,6 +37,7 @@ namespace TimeExt.RealImplementations
         public void Abort()
         {
             cancelToken.Cancel();
+            this.InternalTask.Wait();
         }
     }
 }
