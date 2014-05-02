@@ -15,30 +15,10 @@ namespace TimeExt.RealImplementations
         {
             this.InternalTask = DotNetTasks.Task.Factory.StartNew(() =>
             {
-                var forIsExit = new object();
-                var isExit = false;
-
                 var currentThread = System.Threading.Thread.CurrentThread;
-                cancelToken.Token.Register(() =>
-                {
-                    lock (forIsExit)
-                    {
-                        // 実行が終了していたらAbortを呼ばない(呼ぶと、既に別の仕事をしている可能性のあるcurrentThreadをAbortしてしまう)
-                        if (isExit)
-                            return;
-                        currentThread.Abort();
-                    }
-                });
-                try
+                using (cancelToken.Token.Register(currentThread.Abort))
                 {
                     action();
-                }
-                finally
-                {
-                    lock (forIsExit)
-                    {
-                        isExit = true;
-                    }
                 }
             }, cancelToken.Token);
         }
