@@ -8,6 +8,9 @@ namespace TimeExt.RealImplementations
 {
     internal sealed class Task : ITask
     {
+        readonly Guid id = Guid.NewGuid();
+        public Guid Id { get { return this.id; } }
+
         internal readonly DotNetTasks.Task InternalTask;
         readonly System.Threading.CancellationTokenSource cancelToken = new System.Threading.CancellationTokenSource();
 

@@ -7,6 +7,9 @@ namespace TimeExt.VirtualImplementations
 {
     internal sealed class Task : ITask, IExecution
     {
+        readonly Guid id = Guid.NewGuid();
+        public Guid Id { get { return this.id; } }
+
         readonly Timeline timeline;
         readonly ExecutionContext currentContext;
         readonly DateTime origin;

@@ -43,6 +43,8 @@ namespace TimeExt
     /// </summary>
     public interface ITask : IDisposable
     {
+        Guid Id { get; }
+
         void Join();
 
         void Abort();
