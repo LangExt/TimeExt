@@ -1,10 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 
 namespace TimeExt.VirtualImplementations
 {
+    [DebuggerDisplay("Task Id = {Id}")]
     internal sealed class Task : ITask, IExecution
     {
         readonly Guid id = Guid.NewGuid();

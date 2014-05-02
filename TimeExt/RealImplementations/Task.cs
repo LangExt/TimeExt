@@ -1,11 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using DotNetTasks = System.Threading.Tasks;
 
 namespace TimeExt.RealImplementations
 {
+    [DebuggerDisplay("Task Id = {Id}")]
     internal sealed class Task : ITask
     {
         readonly Guid id = Guid.NewGuid();
