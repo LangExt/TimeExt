@@ -10,4 +10,8 @@
     <description>This is a mock library for time API.</description>
     <tags>c# time mock library</tags>
   </metadata>
+  <files>
+    <file src="bin\Release45\*.dll" target="lib\net45"/>
+    <file src="bin\Release45\*.xml" target="lib\net45"/>
+  </files>
 </package>
